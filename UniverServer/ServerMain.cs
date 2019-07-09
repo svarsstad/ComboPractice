@@ -85,6 +85,7 @@ namespace UniverServer
 
         private void AcceptCallback(IAsyncResult callback)
         {
+            Monitor.Enter(monitorLock);
             Socket socket = serverSocket.EndAccept(callback);
             Clients.Add(new ClientData(socket));
             Clients[Clients.Count - 1].thread = Thread.CurrentThread;
@@ -100,6 +101,7 @@ namespace UniverServer
                 new AsyncCallback(RecieveCallback),
                 state);
             Interlocked.Decrement(ref receptors);
+            Monitor.Exit(monitorLock);
         }
 
         private void RecieveCallback(IAsyncResult callback)
@@ -119,12 +121,12 @@ namespace UniverServer
                     mainWindow.SetLog(text);
                     if (text.ToLower() == "1#wsup")
                     {
-                        SendText("All good.", listener.Server);
+                        SendText("All good.", socket);
                         mainWindow.SetLog("All good.");
                     }
                     else
                     {
-                        SendText("No Good", listener.Server);
+                        SendText("No Good", socket);
                         mainWindow.SetLog("No Good");
                     }
                 }
