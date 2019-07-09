@@ -10,20 +10,10 @@ namespace UniverServer
         public Thread thread;
         public string id;
 
-        public ClientData()
-        {
-            id = Guid.NewGuid().ToString();
-        }
         public ClientData(Socket sc)
         {
             id = Guid.NewGuid().ToString();
             socket = sc;
-        }
-        public ClientData(Socket sc, Thread tr)
-        {
-            id = Guid.NewGuid().ToString();
-            socket = sc;
-            thread = tr;
         }
     }
 }

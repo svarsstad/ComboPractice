@@ -9,10 +9,7 @@ namespace UniverServer
 {
     public partial class MainWindow : Window
     {
-
-        //List<Client> Clients = new List<Client>();
-        //List<Client> ClientHistory = new List<Client>();
-        ServerMain serverMainInstance = new ServerMain();
+        readonly ServerMain serverMainInstance = new ServerMain();
 
         public MainWindow()
         {
@@ -42,11 +39,10 @@ namespace UniverServer
             return null;
         }
 
-        public Action SetLog(String logEntry)
+        public Action SetLog(string logEntry)
         {
-
             Ser_Log.Dispatcher.InvokeAsync(() =>
-                this.Ser_Log.Text += logEntry + '\n');
+                Ser_Log.Text += logEntry + '\n');
             return null;
         }
 
@@ -56,15 +52,17 @@ namespace UniverServer
             {
                 Cli_Cle.IsEnabled = false;
             }
+
             Monitor.Enter(ServerMain.monitorLock);
 
             try {
                 ServerMain.Clients.RemoveAt(Cli_Lis.SelectedIndex);
-            } catch (Exception e){
+            } catch (Exception e) {
                 Console.WriteLine(e);
             }
 
             Monitor.Exit(ServerMain.monitorLock);
+
             Cli_Lis.Items.RemoveAt(Cli_Lis.SelectedIndex);
             Cli_Del.IsEnabled = false;
         }
@@ -72,8 +70,11 @@ namespace UniverServer
         private void Cli_Cle_Click(object sender, RoutedEventArgs e)
         {
             Monitor.Enter(ServerMain.monitorLock);
+
             ServerMain.Clients = new List<ClientData>();
-            Monitor.Enter(ServerMain.monitorLock);
+
+            Monitor.Exit(ServerMain.monitorLock);
+
             Cli_Lis.Items.Clear();
             Cli_Cle.IsEnabled = false;
         }
@@ -93,7 +94,7 @@ namespace UniverServer
                 Console.WriteLine(e);
             }
 
-            Monitor.Enter(ServerMain.monitorLock);
+            Monitor.Exit(ServerMain.monitorLock);
 
             His_Lis.Items.RemoveAt(His_Lis.SelectedIndex);
             His_Del.IsEnabled = false;
@@ -107,25 +108,21 @@ namespace UniverServer
         private void His_Cle_Click(object sender, RoutedEventArgs e)
         {
             Monitor.Enter(ServerMain.monitorLock);
+
             ServerMain.ClientHistory = new List<ClientData>();
+
             Monitor.Exit(ServerMain.monitorLock);
+
             His_Lis.Items.Clear();
             His_Cle.IsEnabled = false;
             His_Del.IsEnabled = false;
         }
 
-        private void Cli_Sen_Click(object sender, RoutedEventArgs e)
-        {
-        }
+        private void Cli_Sen_Click(object sender, RoutedEventArgs e) { }
 
-        private void Bro_Sen_Click(object sender, RoutedEventArgs e)
-        {
-        }
+        private void Bro_Sen_Click(object sender, RoutedEventArgs e) { }
 
-        private void Ref_All_Click(object sender, RoutedEventArgs e)
-        {
-            RefreshAll();
-        }
+        private void Ref_All_Click(object sender, RoutedEventArgs e) => RefreshAll();
 
         private void RefreshAll()
         {
