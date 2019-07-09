@@ -35,7 +35,7 @@ namespace UniverServer
             Task.Run(() => serverMainInstance.Run(this));
         }
 
-         public Action Refresh_Async()
+        public Action Refresh_Async()
         {
             Ser_Log.Dispatcher.InvokeAsync(() =>
                 this.RefreshAll());
@@ -127,7 +127,7 @@ namespace UniverServer
             RefreshAll();
         }
 
-        public void RefreshAll()
+        private void RefreshAll()
         {
             Cli_Lis.Items.Clear();
             His_Lis.Items.Clear();

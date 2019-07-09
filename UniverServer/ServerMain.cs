@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace UniverServer
 {
@@ -43,14 +42,12 @@ namespace UniverServer
                     while (!(message = reader.ReadLine()).Equals("Exit") || (message == null))
                     {
                         UI.SetLog("from client: " + message);
-                        UI.SetLog("From server: " + message);
                         writer.Flush();
                     }
                     writer.Close();
                     reader.Close();
                 }
                 clientRequest.Close();
-
             }
             catch (Exception e)
             {
@@ -77,7 +74,7 @@ namespace UniverServer
             {
                 status = "Online";
 
-                ServerMain.mainWindow.RefreshAll();
+                ServerMain.mainWindow.Refresh_Async()();
                 ServerMain.mainWindow.SetLog("Welcome back, Commander");
 
                 listener.Start();
@@ -85,7 +82,7 @@ namespace UniverServer
                 ServerMain.mainWindow.SetLog("Listener active");
                 status = "Online";
 
-                ServerMain.mainWindow.RefreshAll();
+                ServerMain.mainWindow.Refresh_Async();
 
                 while (exit != true)
                 {
