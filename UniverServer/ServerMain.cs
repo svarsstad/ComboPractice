@@ -115,7 +115,8 @@ namespace UniverServer
             Clients.Add(new ClientData(socket));
             Clients[Clients.Count - 1].thread = Thread.CurrentThread;
             ClientSockets.Add(socket);
-            socket.BeginReceive(socketDataBuffer[Clients.Count - 1], 0, socketDataBuffer.Length, SocketFlags.None, new AsyncCallback(RecieveCallback), socket);
+            var state = new ValueTuple<Socket, int>(socket, Clients.Count - 1);
+            socket.BeginReceive(socketDataBuffer[Clients.Count - 1], 0, socketDataBuffer.Length, SocketFlags.None, new AsyncCallback(RecieveCallback), state);
             receptors--;
         }
 
@@ -123,11 +124,12 @@ namespace UniverServer
         {
             try
             {
-                var socket = (Socket)callback.AsyncState;
+                ValueTuple<Socket, int> state = (ValueTuple<Socket, int>)callback.AsyncState;
+                var socket = state.Item1;
                 int recievedSize = socket.EndReceive(callback);
                 byte[] dataBuffer = new byte[recievedSize];
 
-                Array.Copy(socketDataBuffer[1], dataBuffer, recievedSize);
+                Array.Copy(socketDataBuffer[state.Item2], dataBuffer, recievedSize);
 
                 string text = Encoding.ASCII.GetString(dataBuffer);
                 if (recievedSize > 0)
