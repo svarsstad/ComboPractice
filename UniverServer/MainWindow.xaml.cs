@@ -29,18 +29,10 @@ namespace UniverServer
 
             Status_Box.Text =
                 "IPv4:\t\t\t" + serverMainInstance.serverIPLocalv4 + '\n' +
-                "IPv6:\t\t\t" + serverMainInstance.serverIPLocalv6 + '\n' +
                 "hostName:\t\t" + serverMainInstance.hostName + '\n' +
                 "Status:\t\t\t" + serverMainInstance.status;
 
             Task.Run(() => serverMainInstance.Run(this));
-        }
-
-        public Action Refresh_Async()
-        {
-            Ser_Log.Dispatcher.InvokeAsync(() =>
-                this.RefreshAll());
-            return null;
         }
 
         public Action SetLog(String logEntry)
