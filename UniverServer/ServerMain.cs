@@ -12,7 +12,7 @@ namespace UniverServer
     class ServerMain
     {
         bool exit = false;
-        static MainWindow UI;
+        static MainWindow mainWindow;
         // Monitor
         public static object monitorLock = new object();
         // sockets / clients
@@ -65,11 +65,11 @@ namespace UniverServer
                 socketDataBuffer[i] = new byte[BUFFER_SIZE];
             }
 
-            UI = mainWindow;
+            ServerMain.mainWindow = mainWindow;
             hostName = Dns.GetHostName();
             var hostEntry = Dns.GetHostEntry(hostName);
-            serverIPLocalv4 = hostEntry.AddressList[1].ToString();
-            serverIPLocalv6 = hostEntry.AddressList[0].ToString();
+            serverIPLocalv4 = hostEntry.AddressList[1].MapToIPv4().ToString();
+            serverIPLocalv6 = hostEntry.AddressList[0].MapToIPv6().ToString();
             var listener = new TcpListener(IPAddress.Parse(serverIPLocalv4), serverPort);
 
             serverSocket.Bind(new IPEndPoint(IPAddress.Any, serverPort));
@@ -79,15 +79,15 @@ namespace UniverServer
             {
                 status = "Online";
 
-                UI.RefreshAll();
-                UI.SetLog("Welcome back, Commander");
+                ServerMain.mainWindow.RefreshAll();
+                ServerMain.mainWindow.SetLog("Welcome back, Commander");
 
                 listener.Start();
 
-                UI.SetLog("Listener active");
+                ServerMain.mainWindow.SetLog("Listener active");
                 status = "Online";
 
-                UI.RefreshAll();
+                ServerMain.mainWindow.RefreshAll();
 
                 while (exit != true)
                 {
@@ -105,9 +105,9 @@ namespace UniverServer
             finally
             {
                 listener.Stop();
-                UI.SetLog("Exiting...");
+                ServerMain.mainWindow.SetLog("Exiting...");
                 status = "Offline";
-                UI.SetLog("server shutdown");
+                ServerMain.mainWindow.SetLog("server shutdown");
             }
         }
 
@@ -136,16 +136,16 @@ namespace UniverServer
                 {
                     if (recievedSize > 0)
                     {
-                        UI.SetLog(text);
+                        mainWindow.SetLog(text);
                         if (text.ToLower() == "1#wsup")
                         {
                             SendText("All good.", socket);
-                            UI.SetLog("All good.");
+                            mainWindow.SetLog("All good.");
                         }
                         else
                         {
                             SendText("No Good", socket);
-                            UI.SetLog("No Good");
+                            mainWindow.SetLog("No Good");
                         }
                     }
                 }
