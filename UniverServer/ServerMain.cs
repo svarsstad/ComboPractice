@@ -66,7 +66,7 @@ namespace UniverServer
                     if (MAX_CLIENTS >= receptors)
                     {
                         serverSocket.BeginAccept(new AsyncCallback(AcceptCallback),null);
-                        receptors++;
+                        Interlocked.Increment(ref receptors);
                     }
                 }
             }
@@ -99,7 +99,7 @@ namespace UniverServer
                 SocketFlags.None,
                 new AsyncCallback(RecieveCallback),
                 state);
-            receptors--;
+            Interlocked.Decrement(ref receptors);
         }
 
         private void RecieveCallback(IAsyncResult callback)
