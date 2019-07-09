@@ -27,9 +27,12 @@ namespace UniverServer
         
         //network
         public IPAddress serverIPLocalv4;
-        private TcpListener listener;
         public string hostName;
+        IPHostEntry hostEntry;
+
+        
         public int serverPort = 8083;
+        public int clientPort = 8084;
         public string status = "Offline";
 
         public void Run(MainWindow mainWindow)
@@ -39,13 +42,12 @@ namespace UniverServer
             }
 
             ServerMain.mainWindow = mainWindow;
-            hostName = Dns.GetHostName();
-            var hostEntry = Dns.GetHostEntry(hostName);
-            
-            serverIPLocalv4 = hostEntry.AddressList.Last().MapToIPv4();
-            listener = new TcpListener(serverIPLocalv4, serverPort);
 
-            serverSocket.Bind(new IPEndPoint(IPAddress.Any, serverPort));
+            hostName = Dns.GetHostName();
+            hostEntry = Dns.GetHostEntry(hostName);
+            serverIPLocalv4 = hostEntry.AddressList.Last().MapToIPv4();
+
+            serverSocket.Bind(new IPEndPoint(serverIPLocalv4, serverPort));
             serverSocket.Listen(MAX_CLIENTS);
             
             try
@@ -55,7 +57,6 @@ namespace UniverServer
                 ServerMain.mainWindow.Refresh_Async();
                 ServerMain.mainWindow.SetLog("Welcome back, Commander");
 
-                listener.Start();
 
                 ServerMain.mainWindow.SetLog("Listener active");
                 status = "Online";
@@ -77,7 +78,6 @@ namespace UniverServer
             }
             finally
             {
-                listener.Stop();
                 ServerMain.mainWindow.SetLog("Exiting...");
                 status = "Offline";
                 ServerMain.mainWindow.SetLog("server shutdown");
