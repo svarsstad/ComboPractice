@@ -14,6 +14,7 @@ namespace UniverServer
         static MainWindow mainWindow;
         // Monitor
         public static object monitorLock = new object();
+        public static object monitorLockClients = new object();
         // sockets / clients
         int receptors = 0; //number of async callback methods actively awaiting clients
         private Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -85,23 +86,28 @@ namespace UniverServer
 
         private void AcceptCallback(IAsyncResult callback)
         {
-            Monitor.Enter(monitorLock);
+            int id;
             Socket socket = serverSocket.EndAccept(callback);
+            Monitor.Enter(monitorLockClients);
             Clients.Add(new ClientData(socket));
-            Clients[Clients.Count - 1].thread = Thread.CurrentThread;
             ClientSockets.Add(socket);
+            id = Clients.Count - 1;
+            Monitor.Exit(monitorLockClients);
 
-            var state = new ValueTuple<Socket, int>(socket, Clients.Count - 1);
+            Clients[id].thread = Thread.CurrentThread;
+            
+
+            var state = new ValueTuple<Socket, int>(socket, id);
 
             socket.BeginReceive(
-                socketDataBuffer[Clients.Count - 1],
+                socketDataBuffer[id],
                 0,
                 socketDataBuffer.Length,
                 SocketFlags.None,
                 new AsyncCallback(RecieveCallback),
                 state);
             Interlocked.Decrement(ref receptors);
-            Monitor.Exit(monitorLock);
+            
         }
 
         private void RecieveCallback(IAsyncResult callback)
