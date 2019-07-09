@@ -2,14 +2,10 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
 
 namespace UniverServer
 {
@@ -18,7 +14,7 @@ namespace UniverServer
         bool exit = false;
         static MainWindow UI;
         // Monitor
-        public static Object monitorLock = new Object();
+        public static object monitorLock = new object();
         // sockets / clients
         int receptors = 0; //number of async callback methods actively awaiting clients
         private Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -31,89 +27,80 @@ namespace UniverServer
        
         
         //network
-        public String serverIPLocalv4;
-        public String serverIPLocalv6;
-        public String hostName;
+        public string serverIPLocalv4;
+        public string serverIPLocalv6;
+        public string hostName;
         public int serverPort = 8083;
-        public String status = "Offline";
-        private List<Task> Threads = new List<Task>();
+        public string status = "Offline";
 
         private void ProcessClientRequests(TcpClient clientRequest, MainWindow UI)
         {
             try
             {
-                StreamReader reader = new StreamReader(clientRequest.GetStream());
-                StreamWriter writer = new StreamWriter(clientRequest.GetStream());
-                String message = "";
-                while (!(message = reader.ReadLine()).Equals("Exit") || (message == null))
+                using (var reader = new StreamReader(clientRequest.GetStream()))
+                using (var writer = new StreamWriter(clientRequest.GetStream()))
                 {
-                    UI.SetLog("from client: " + message);
-                    UI.SetLog("From server: " + message);
-                    writer.Flush();
+                    var message = "";
+                    while (!(message = reader.ReadLine()).Equals("Exit") || (message == null))
+                    {
+                        UI.SetLog("from client: " + message);
+                        UI.SetLog("From server: " + message);
+                        writer.Flush();
+                    }
+                    writer.Close();
+                    reader.Close();
                 }
-                writer.Close();
-                reader.Close();
                 clientRequest.Close();
-                
-            }
-            catch(Exception e)
-            {
 
             }
-                    
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
-
-        public void Run(MainWindow ptr)
+        public void Run(MainWindow mainWindow)
         {
-            for (int i = 0; i <MAX_CLIENTS; i++){
+            for (int i = 0; i < MAX_CLIENTS; i++){
                 socketDataBuffer[i] = new byte[BUFFER_SIZE];
             }
-            UI = ptr;
+
+            UI = mainWindow;
             hostName = Dns.GetHostName();
-            serverIPLocalv4 = Dns.GetHostEntry(hostName).AddressList[1].ToString();
-            serverIPLocalv6 = Dns.GetHostEntry(hostName).AddressList[0].ToString();
-            TcpListener listener = new TcpListener(IPAddress.Parse(serverIPLocalv4), serverPort); ;
+            var hostEntry = Dns.GetHostEntry(hostName);
+            serverIPLocalv4 = hostEntry.AddressList[1].ToString();
+            serverIPLocalv6 = hostEntry.AddressList[0].ToString();
+            var listener = new TcpListener(IPAddress.Parse(serverIPLocalv4), serverPort);
 
             serverSocket.Bind(new IPEndPoint(IPAddress.Any, serverPort));
             serverSocket.Listen(MAX_CLIENTS);
-            //serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), null);
-
+            
             try
             {
                 status = "Online";
-                UI.Refresh_Async();
+
+                UI.RefreshAll();
                 UI.SetLog("Welcome back, Commander");
+
                 listener.Start();
+
                 UI.SetLog("Listener active");
-
-
                 status = "Online";
-                UI.Refresh_Async();
+
+                UI.RefreshAll();
 
                 while (exit != true)
                 {
                     if (MAX_CLIENTS >= receptors)
                     {
-
-
-                        // TcpClient tcpClient = listener.AcceptTcpClient();
-                        //UI.SetLog("Accepted new client");
-
-                        //Threads.Add(new Task(()=>this.ProcessClientRequests(tcpClient, UI)));
-
-
-                        this.serverSocket.BeginAccept(new AsyncCallback(AcceptCallback),null);
-                        //Threads.Add(new Task(() => this.serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), null)));
+                        serverSocket.BeginAccept(new AsyncCallback(AcceptCallback),null);
                         receptors++;
-
                     }
                 }
-                //ptr.AddClient("192.77.77.77", "abcd.12f1.2a21.ffa2");
             }
             catch(Exception e)
             {
-                ptr.SetLog(e.ToString());
+                mainWindow.SetLog(e.ToString());
             }
             finally
             {
@@ -122,15 +109,10 @@ namespace UniverServer
                 status = "Offline";
                 UI.SetLog("server shutdown");
             }
-
-            return;
         }
-     
 
         private void AcceptCallback(IAsyncResult callback)
         {
-           // UI.Cli_Mes.Text = $"new Client {Clients.Count}";
-           
             Socket socket = serverSocket.EndAccept(callback);
             Clients.Add(new ClientData(socket));
             Clients[Clients.Count - 1].thread = Thread.CurrentThread;
@@ -143,14 +125,15 @@ namespace UniverServer
         {
             try
             {
-                Socket socket = (Socket)callback.AsyncState;
+                var socket = (Socket)callback.AsyncState;
                 int recievedSize = socket.EndReceive(callback);
                 byte[] dataBuffer = new byte[recievedSize];
+
                 Array.Copy(socketDataBuffer[1], dataBuffer, recievedSize);
+
                 string text = Encoding.ASCII.GetString(dataBuffer);
                 if (text[0] == '1')
                 {
-
                     if (recievedSize > 0)
                     {
                         UI.SetLog(text);
@@ -167,31 +150,33 @@ namespace UniverServer
                     }
                 }
             }
-            catch(SocketException e)
+            catch(Exception e)
             {
-                // client disconnect possibly
+                Console.WriteLine(e);
             }
-
         }
-        private void SendText(String text, Socket socket)
+
+        private void SendText(string text, Socket socket)
         {
             try
             {
                 byte[] dataReply = Encoding.ASCII.GetBytes("0#"+text);
                 socket.BeginSend(dataReply, 0, dataReply.Length, SocketFlags.None, new AsyncCallback(RecieveCallback), socket);
             }
-            catch (SocketException) { }
+            catch (SocketException e) {
+                Console.WriteLine(e);
+            }
         }
+
         private void SendCallback(IAsyncResult callback) {
-            Socket socket = (Socket)callback.AsyncState;
+            var socket = (Socket)callback.AsyncState;
             socket.EndSend(callback);
             socket.Disconnect(true);
         }
 
         public void End()
         {
-            this.exit = true;
+            exit = true;
         }
-        
     }
 }

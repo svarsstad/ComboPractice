@@ -12,18 +12,18 @@ namespace UniverServer
 
         public ClientData()
         {
-            this.id = Guid.NewGuid().ToString();
+            id = Guid.NewGuid().ToString();
         }
         public ClientData(Socket sc)
         {
-            this.id = Guid.NewGuid().ToString();
-            this.socket = sc;
+            id = Guid.NewGuid().ToString();
+            socket = sc;
         }
         public ClientData(Socket sc, Thread tr)
         {
-            this.id = Guid.NewGuid().ToString();
-            this.socket = sc;
-            this.thread = tr;
+            id = Guid.NewGuid().ToString();
+            socket = sc;
+            thread = tr;
         }
     }
 }
