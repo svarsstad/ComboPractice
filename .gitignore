@@ -257,3 +257,6 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+*.pdb
+*.exe
+*.cache
