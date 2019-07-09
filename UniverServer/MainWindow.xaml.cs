@@ -38,7 +38,7 @@ namespace UniverServer
         public Action Refresh_Async()
         {
             Ser_Log.Dispatcher.InvokeAsync(() =>
-                this.RefreshAll());
+                RefreshAll());
             return null;
         }
 

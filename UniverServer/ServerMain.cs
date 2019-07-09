@@ -74,7 +74,7 @@ namespace UniverServer
             {
                 status = "Online";
 
-                ServerMain.mainWindow.Refresh_Async()();
+                ServerMain.mainWindow.Refresh_Async();
                 ServerMain.mainWindow.SetLog("Welcome back, Commander");
 
                 listener.Start();
