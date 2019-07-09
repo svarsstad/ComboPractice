@@ -116,7 +116,7 @@ namespace UniverServer
             Monitor.Enter(ServerMain.monitorLock);
             //serverMainInstance.Clients = new List<ClientData>();
             ServerMain.Clients = new List<ClientData>();
-            Monitor.Enter(ServerMain.monitorLock);
+            Monitor.Exit(ServerMain.monitorLock);
             Cli_Lis.Items.Clear();
             Cli_Cle.IsEnabled = false;
         }
@@ -130,7 +130,7 @@ namespace UniverServer
             }
             Monitor.Enter(ServerMain.monitorLock);
             try { ServerMain.ClientHistory.RemoveAt(His_Lis.SelectedIndex); } catch { }
-            Monitor.Enter(ServerMain.monitorLock);
+            Monitor.Exit(ServerMain.monitorLock);
             His_Lis.Items.RemoveAt(His_Lis.SelectedIndex);
             His_Del.IsEnabled = false;
             if (His_Lis.Items.IsEmpty)
