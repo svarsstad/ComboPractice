@@ -152,7 +152,6 @@ namespace UniverServer
 
             Status_Box.Text =
                 "IPv4:\t\t\t" + serverMainInstance.serverIPLocalv4 + '\n' +
-                "IPv6:\t\t\t" + serverMainInstance.serverIPLocalv6 + '\n' +
                 "hostName:\t\t" + serverMainInstance.hostName + '\n' +
                 "Status:\t\t\t" + serverMainInstance.status;
         }

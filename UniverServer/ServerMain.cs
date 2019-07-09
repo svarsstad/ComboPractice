@@ -27,8 +27,7 @@ namespace UniverServer
        
         
         //network
-        public string serverIPLocalv4;
-        public string serverIPLocalv6;
+        public IPAddress serverIPLocalv4;
         public string hostName;
         public int serverPort = 8083;
         public string status = "Offline";
@@ -68,9 +67,8 @@ namespace UniverServer
             ServerMain.mainWindow = mainWindow;
             hostName = Dns.GetHostName();
             var hostEntry = Dns.GetHostEntry(hostName);
-            serverIPLocalv4 = hostEntry.AddressList[1].MapToIPv4().ToString();
-            serverIPLocalv6 = hostEntry.AddressList[0].MapToIPv6().ToString();
-            var listener = new TcpListener(IPAddress.Parse(serverIPLocalv4), serverPort);
+            serverIPLocalv4 = hostEntry.AddressList[1].MapToIPv4();
+            var listener = new TcpListener(serverIPLocalv4, serverPort);
 
             serverSocket.Bind(new IPEndPoint(IPAddress.Any, serverPort));
             serverSocket.Listen(MAX_CLIENTS);
