@@ -43,14 +43,20 @@ namespace UniverServer
             return null;
         }
 
-        private void Cli_Del_Click(object sender, RoutedEventArgs e)
+        private void Cli_Del_Click(object sender, RoutedEventArgs eventArgs)
         {
             if (Cli_Lis.Items.IsEmpty)
             {
                 Cli_Cle.IsEnabled = false;
             }
             Monitor.Enter(ServerMain.monitorLock);
-            try { ServerMain.Clients.RemoveAt(Cli_Lis.SelectedIndex); } catch { }
+
+            try {
+                ServerMain.Clients.RemoveAt(Cli_Lis.SelectedIndex);
+            } catch (Exception e){
+                Console.WriteLine(e);
+            }
+
             Monitor.Exit(ServerMain.monitorLock);
             Cli_Lis.Items.RemoveAt(Cli_Lis.SelectedIndex);
             Cli_Del.IsEnabled = false;
