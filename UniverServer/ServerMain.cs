@@ -64,8 +64,8 @@ namespace UniverServer
             ServerMain.mainWindow = mainWindow;
             hostName = Dns.GetHostName();
             var hostEntry = Dns.GetHostEntry(hostName);
-            serverIPLocalv4 = hostEntry.AddressList[1].MapToIPv4();
-            var listener = new TcpListener(serverIPLocalv4, serverPort);
+            serverIPLocalv4 = IPAddress.Loopback;
+            var listener = new TcpListener(IPAddress.Loopback, serverPort);
 
             serverSocket.Bind(new IPEndPoint(IPAddress.Any, serverPort));
             serverSocket.Listen(MAX_CLIENTS);
