@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Linq;
 
 namespace UniverServer
 {
@@ -27,6 +28,7 @@ namespace UniverServer
         
         //network
         public IPAddress serverIPLocalv4;
+        private TcpListener listener;
         public string hostName;
         public int serverPort = 8083;
         public string status = "Offline";
@@ -64,8 +66,9 @@ namespace UniverServer
             ServerMain.mainWindow = mainWindow;
             hostName = Dns.GetHostName();
             var hostEntry = Dns.GetHostEntry(hostName);
-            serverIPLocalv4 = IPAddress.Loopback;
-            var listener = new TcpListener(IPAddress.Loopback, serverPort);
+            
+            serverIPLocalv4 = hostEntry.AddressList.Last().MapToIPv4();
+            this.listener = new TcpListener(serverIPLocalv4, serverPort);
 
             serverSocket.Bind(new IPEndPoint(IPAddress.Any, serverPort));
             serverSocket.Listen(MAX_CLIENTS);
@@ -127,21 +130,18 @@ namespace UniverServer
                 Array.Copy(socketDataBuffer[1], dataBuffer, recievedSize);
 
                 string text = Encoding.ASCII.GetString(dataBuffer);
-                if (text[0] == '1')
+                if (recievedSize > 0)
                 {
-                    if (recievedSize > 0)
+                    mainWindow.SetLog(text);
+                    if (text.ToLower() == "1#wsup")
                     {
-                        mainWindow.SetLog(text);
-                        if (text.ToLower() == "1#wsup")
-                        {
-                            SendText("All good.", socket);
-                            mainWindow.SetLog("All good.");
-                        }
-                        else
-                        {
-                            SendText("No Good", socket);
-                            mainWindow.SetLog("No Good");
-                        }
+                        SendText("All good.", listener.Server);
+                        mainWindow.SetLog("All good.");
+                    }
+                    else
+                    {
+                        SendText("No Good", listener.Server);
+                        mainWindow.SetLog("No Good");
                     }
                 }
             }

@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Windows;
@@ -11,7 +12,7 @@ namespace Client
     public partial class MainWindow : Window
     {
         public int serverPort = 8083;
-        Socket socket = new Socket(AddressFamily.InterNetwork,SocketType.Stream, ProtocolType.Tcp);
+        private Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
         public MainWindow()
         {
@@ -30,7 +31,7 @@ namespace Client
             }
         }
 
-        private void Cli_Sen_Click(object sender, RoutedEventArgs e)
+        private void Cli_Sen_Click(object sender, RoutedEventArgs eventArgs)
         {
             string text = Cli_Mes.Text;
             byte[] buffer = Encoding.ASCII.GetBytes("1#"+text);
@@ -44,6 +45,7 @@ namespace Client
             {
                 sys_mes.Text = "Connection good";
             }
+
             socket.Send(buffer);
         }
     }
