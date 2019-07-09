@@ -140,7 +140,7 @@ namespace UniverServer
             try
             {
                 byte[] dataReply = Encoding.ASCII.GetBytes("0#"+text);
-                socket.BeginSend(dataReply, 0, dataReply.Length, SocketFlags.None, new AsyncCallback(RecieveCallback), socket);
+                socket.Send(dataReply);
             }
             catch (SocketException e) {
                 Console.WriteLine(e);
