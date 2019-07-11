@@ -1,8 +1,10 @@
 ﻿using System.Net;
+using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Windows;
 using System.Linq;
+using SharedVars;
 
 namespace Client
 {
@@ -11,12 +13,12 @@ namespace Client
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static bool exit = false;
         public IPAddress serverIPLocalv4;
         public string hostName;
         IPHostEntry hostEntry;
 
-        public int serverPort = 8083;
-        public int clientPort = 8084;
+        
         public string status = "Offline";
 
         private Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -32,13 +34,20 @@ namespace Client
             {
                 try
                 {
-                    socket.Connect(serverIPLocalv4, serverPort);
-                    sys_mes.Text = "Connected";
+                    socket.Connect(serverIPLocalv4, Vars.serverPort);
+                    
                 }
                 catch (SocketException)
                 {
                     sys_mes.Text = "Socket exception";  // you can put a counter here to see how many attempts are made
                 }
+            }
+            sys_mes.Text = "Connected";
+            while (!exit)
+            {
+                Span<byte> buffer = new Span<byte>();
+                socket.BeginReceive()
+
             }
         }
 

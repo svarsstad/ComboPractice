@@ -5,11 +5,14 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Linq;
+using SharedVars;
+
 
 namespace UniverServer
 {
     public class ServerMain
     {
+        
         bool exit = false;
         static MainWindow mainWindow;
         // Monitor
@@ -21,9 +24,7 @@ namespace UniverServer
         static public List<Socket> ClientSockets = new List<Socket>();
         static public List<ClientData> Clients = new List<ClientData>();
         static public List<ClientData> ClientHistory = new List<ClientData>();
-        const int MAX_CLIENTS = 10;
-        const int BUFFER_SIZE = 128;
-        byte[][] socketDataBuffer = new byte[MAX_CLIENTS][];
+        byte[][] socketDataBuffer = new byte[Vars.MAX_CLIENTS][];
         
         //network
         public IPAddress serverIPLocalv4;
@@ -31,14 +32,13 @@ namespace UniverServer
         IPHostEntry hostEntry;
 
         
-        public int serverPort = 8083;
-        public int clientPort = 8084;
+
         public string status = "Offline";
 
         public void Run(MainWindow mainWindow)
         {
-            for (int i = 0; i < MAX_CLIENTS; i++){
-                socketDataBuffer[i] = new byte[BUFFER_SIZE];
+            for (int i = 0; i < Vars.MAX_CLIENTS; i++){
+                socketDataBuffer[i] = new byte[Vars.BUFFER_SIZE];
             }
 
             ServerMain.mainWindow = mainWindow;
@@ -47,8 +47,8 @@ namespace UniverServer
             hostEntry = Dns.GetHostEntry(hostName);
             serverIPLocalv4 = hostEntry.AddressList.Last().MapToIPv4();
 
-            serverSocket.Bind(new IPEndPoint(serverIPLocalv4, serverPort));
-            serverSocket.Listen(MAX_CLIENTS);
+            serverSocket.Bind(new IPEndPoint(serverIPLocalv4, Vars.serverPort));
+            serverSocket.Listen(Vars.MAX_CLIENTS);
             
             try
             {
@@ -65,7 +65,7 @@ namespace UniverServer
 
                 while (exit != true)
                 {
-                    if (MAX_CLIENTS >= receptors)
+                    if (Vars.MAX_CLIENTS >= receptors)
                     {
                         serverSocket.BeginAccept(new AsyncCallback(AcceptCallback),null);
                         Interlocked.Increment(ref receptors);
