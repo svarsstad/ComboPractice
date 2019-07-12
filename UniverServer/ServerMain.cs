@@ -70,6 +70,20 @@ namespace UniverServer
                         serverSocket.BeginAccept(new AsyncCallback(AcceptCallback),null);
                         Interlocked.Increment(ref receptors);
                     }
+                    Monitor.Enter(monitorLock);
+                    for( int i = 0;  i < Clients.Count-1; i ++)
+                    {
+                        if (!Clients[i].socket.Connected)
+                        {
+                            Clients.RemoveAt(i);
+                        }
+                        else
+                        {
+                            Clients[i].i = i;
+                        }
+                    }
+
+                    Monitor.Exit(monitorLock);
                 }
             }
             catch(Exception e)
@@ -109,6 +123,7 @@ namespace UniverServer
             {
                 try
                 {
+                   
                     if (clientData.dataToSend) {
                     //    clientData.socket.BeginSend();
                             }
@@ -127,6 +142,48 @@ namespace UniverServer
 
             }
             return null;
+        }
+
+
+
+        public void SendTextAll(string text)
+        {
+            Task.Run(() =>
+            {
+                text = Vars.SERVER_SIGN + text;
+                Span<byte> dataReply = stackalloc byte[text.Length * 2];
+                dataReply = Encoding.ASCII.GetBytes(text);
+                for (int i = 0; i < Clients.Count-1; i++)
+                {
+                    try
+                    {
+                        Clients[i].socket.Send(dataReply.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
+            });
+        }
+        public void SendText(string text, int clientIndex)
+        {
+            Task.Run(() =>
+            {
+                text = Vars.SERVER_SIGN + text;
+                Span<byte> dataReply = stackalloc byte[text.Length * 2];
+                dataReply = Encoding.ASCII.GetBytes(text);
+
+                try
+                {
+                    Clients[clientIndex].socket.Send(dataReply.ToArray());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+            );
         }
 
         private void RecieveCallback(IAsyncResult callback)
@@ -162,18 +219,28 @@ namespace UniverServer
             }
         }
 
-        private void SendText(string text, Socket socket)
+        private void SendText (string text, Socket socket)
         {
+
             try
             {
-                byte[] dataReply = Encoding.ASCII.GetBytes(Vars.SERVER_SIGN + text);
-                socket.Send(dataReply);
+                text = Vars.SERVER_SIGN + text;
+                Span<byte> dataReply = stackalloc byte[text.Length * 2];
+                dataReply = Encoding.ASCII.GetBytes(text);
+                socket.Send(dataReply.ToArray());
             }
             catch (SocketException e) {
                 Console.WriteLine(e);
             }
         }
 
-        public void End() => exit = true;
+        public void End()
+        {
+            exit = true;
+            for (int i = 0; i < Clients.Count-1; i++)
+            {
+                Clients[i].End();
+            }
+        }
     }
 }

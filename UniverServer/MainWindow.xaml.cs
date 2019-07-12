@@ -9,7 +9,7 @@ namespace UniverServer
 {
     public partial class MainWindow : Window
     {
-        readonly ServerMain serverMainInstance = new ServerMain();
+        public ServerMain serverMainInstance = new ServerMain();
 
         public MainWindow()
         {
@@ -120,7 +120,10 @@ namespace UniverServer
 
         private void Cli_Sen_Click(object sender, RoutedEventArgs e) { }
 
-        private void Bro_Sen_Click(object sender, RoutedEventArgs e) { }
+        private void Bro_Sen_Click(object sender, RoutedEventArgs e) {
+            //Task.Run(() => serverMainInstance.SendTextAll(Bro_Mes.Text));
+            serverMainInstance.SendTextAll(Bro_Mes.Text);
+        }
 
         private void Ref_All_Click(object sender, RoutedEventArgs e) => RefreshAll();
 

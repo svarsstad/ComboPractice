@@ -18,7 +18,7 @@ namespace Client
 
 
         ClientMain clientBackend = new ClientMain();
-        public string status = "Offline";
+        //public string status = "Offline";
 
         
 
@@ -43,6 +43,10 @@ namespace Client
                 sys_mes.Text = text);
             return null;
         }
-        
+        protected virtual void OnExit(ExitEventArgs e)
+        {
+            clientBackend.End();
+        }
+
     }
 }

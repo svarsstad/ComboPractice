@@ -97,24 +97,37 @@ namespace Client
         }
         public void Send(string text)
         {
-            Span<byte> buffer = stackalloc byte[text.Length + 4]; 
-            buffer = Encoding.ASCII.GetBytes(Vars.CLIENT_SIGN + text);
+            Task.Run(() => {
+                Span<byte> buffer = stackalloc byte[text.Length + 4];
+                buffer = Encoding.ASCII.GetBytes(Vars.CLIENT_SIGN + text);
 
-            if (!socket.Connected)
-            {
-                socket.BeginConnect(
-                    serverIPLocalv4,
-                    Vars.SERVER_PORT,
-                    ConnectionAccepted,
-                    null);
-                while (!connected)
-
+                if (!socket.Connected)
                 {
-                    Thread.Sleep(10);
-                }
-            }
+                    socket.BeginConnect(
+                        serverIPLocalv4,
+                        Vars.SERVER_PORT,
+                        ConnectionAccepted,
+                        null);
+                    while (!connected)
 
-            socket.Send(buffer.ToArray());
+                    {
+                        Thread.Sleep(10);
+                    }
+                }
+                try
+                {
+                    socket.BeginSend(buffer.ToArray(), 0, buffer.Length, SocketFlags.None, null, null);
+                }
+                catch (Exception e)
+                {
+                    System.Console.WriteLine(e);
+                }
+            });
+        }
+        public void End()
+        {
+            exit = true;
+            socket.Disconnect(false);
         }
     }
 }

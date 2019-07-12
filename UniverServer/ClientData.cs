@@ -26,5 +26,10 @@ namespace UniverServer
             task = t;
             this.i = idn;
         }
+        public void End()
+        {
+            socket.Disconnect(false);
+            task.Dispose();
+        }
     }
 }
