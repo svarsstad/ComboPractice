@@ -14,7 +14,7 @@ namespace UniverServer
     {
         
         bool exit = false;
-        static MainWindow mainWindow;
+        static MainWindow serverMainWindow;
         // Monitor
         public static object monitorLock = new object();
         public static object monitorLockClients = new object();
@@ -41,27 +41,27 @@ namespace UniverServer
                 socketDataBuffer[i] = new byte[Vars.BUFFER_SIZE];
             }
 
-            ServerMain.mainWindow = mainWindow;
+            ServerMain.serverMainWindow = mainWindow;
 
             hostName = Dns.GetHostName();
             hostEntry = Dns.GetHostEntry(hostName);
             serverIPLocalv4 = hostEntry.AddressList.Last().MapToIPv4();
 
-            serverSocket.Bind(new IPEndPoint(serverIPLocalv4, Vars.serverPort));
+            serverSocket.Bind(new IPEndPoint(serverIPLocalv4, Vars.SERVER_PORT));
             serverSocket.Listen(Vars.MAX_CLIENTS);
             
             try
             {
                 status = "Online";
 
-                ServerMain.mainWindow.Refresh_Async();
-                ServerMain.mainWindow.SetLog("Welcome back, Commander");
+                ServerMain.serverMainWindow.Refresh_Async();
+                ServerMain.serverMainWindow.SetLog("Welcome back, Commander");
 
 
-                ServerMain.mainWindow.SetLog("Listener active");
+                ServerMain.serverMainWindow.SetLog("Listener active");
                 status = "Online";
 
-                ServerMain.mainWindow.Refresh_Async();
+                ServerMain.serverMainWindow.Refresh_Async();
 
                 while (exit != true)
                 {
@@ -78,9 +78,9 @@ namespace UniverServer
             }
             finally
             {
-                ServerMain.mainWindow.SetLog("Exiting...");
+                ServerMain.serverMainWindow.SetLog("Exiting...");
                 status = "Offline";
-                ServerMain.mainWindow.SetLog("server shutdown");
+                ServerMain.serverMainWindow.SetLog("server shutdown");
             }
         }
 
@@ -124,16 +124,16 @@ namespace UniverServer
                 string text = Encoding.ASCII.GetString(dataBuffer);
                 if (recievedSize > 0)
                 {
-                    mainWindow.SetLog(text);
-                    if (text.ToLower() == "1#wsup")
+                    serverMainWindow.SetLog(text);
+                    if (text.ToLower() == Vars.CLIENT_SIGN + "wsup")
                     {
                         SendText("All good.", socket);
-                        mainWindow.SetLog("All good.");
+                        serverMainWindow.SetLog("All good.");
                     }
                     else
                     {
-                        SendText("No Good", socket);
-                        mainWindow.SetLog("No Good");
+                        //SendText("No Good", socket); //the good reply is overwritten by this
+                        serverMainWindow.SetLog("No Good");
                     }
                 }
             }
@@ -147,7 +147,7 @@ namespace UniverServer
         {
             try
             {
-                byte[] dataReply = Encoding.ASCII.GetBytes("0#"+text);
+                byte[] dataReply = Encoding.ASCII.GetBytes(Vars.SERVER_SIGN + text);
                 socket.Send(dataReply);
             }
             catch (SocketException e) {

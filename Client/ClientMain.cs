@@ -12,7 +12,7 @@ namespace Client
 {
     class ClientMain
     {
-        MainWindow ClientMainWindow;
+        MainWindow clientMainWindow;
         bool exit = false;
         public IPAddress serverIPLocalv4;
         public string hostName;
@@ -24,7 +24,7 @@ namespace Client
 
         public void Run(MainWindow CMW)
         {
-            ClientMainWindow = CMW;
+            clientMainWindow = CMW;
             hostName = Dns.GetHostName();
             hostEntry = Dns.GetHostEntry(hostName);
             serverIPLocalv4 = hostEntry.AddressList.Last().MapToIPv4();
@@ -34,20 +34,20 @@ namespace Client
             try
             {
                 //socket.Connect(serverIPLocalv4, Vars.serverPort);
-                socket.BeginConnect(serverIPLocalv4, Vars.serverPort, ConnectionAccepted, null);
+                socket.BeginConnect(serverIPLocalv4, Vars.SERVER_PORT, ConnectionAccepted, null);
 
                 while (!connected)
 
                 {
-                    Thread.Sleep(10000); // i'm not sure if this does anything
+                    Thread.Sleep(10); 
                 }
             }
             catch (SocketException)
             {
-                ClientMainWindow.Set_Sys_Mes("Socket exception");  // you can put a counter here to see how many attempts are made
+                clientMainWindow.Set_Sys_Mes("Socket exception");  // you can put a counter here to see how many attempts are made
 
             }
-            ClientMainWindow.Set_Sys_Mes("Connected");
+            clientMainWindow.Set_Sys_Mes("Connected");
             while (!exit)
             {
                 try
@@ -64,7 +64,7 @@ namespace Client
         private void ConnectionAccepted(IAsyncResult callback)
         {
             connected = true;
-            ClientMainWindow.Set_Sys_Mes("Connection Success.");
+            clientMainWindow.Set_Sys_Mes("Connection Success.");
 
         }
         private void RecieveCallback(IAsyncResult callback)
@@ -79,10 +79,10 @@ namespace Client
                 string text = Encoding.ASCII.GetString(buffer.ToArray());
                 if (recievedSize > 0)
                 {
-                    ClientMainWindow.Set_Sys_Mes(text);
-                    if (text.ToLower().StartsWith("0#"))
+                    clientMainWindow.Set_Sys_Mes(text);
+                    if (text.ToLower().StartsWith(Vars.SERVER_SIGN))
                     {
-                        ClientMainWindow.Set_Sys_Mes(text);
+                        clientMainWindow.Set_Sys_Mes(text);
                     }
                     else
                     {
@@ -98,11 +98,11 @@ namespace Client
         public void Send(string text)
         {
             Span<byte> buffer = stackalloc byte[text.Length + 4]; 
-            Encoding.ASCII.GetBytes("1#" + text);
+            buffer = Encoding.ASCII.GetBytes(Vars.CLIENT_SIGN + text);
 
             if (!socket.Connected)
             {
-                socket.Connect(serverIPLocalv4, Vars.serverPort);
+                socket.Connect(serverIPLocalv4, Vars.SERVER_PORT);
             }
 
             socket.Send(buffer.ToArray());
