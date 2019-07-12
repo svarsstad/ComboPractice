@@ -93,22 +93,26 @@ namespace UniverServer
             Clients.Add(new ClientData(id, socket));
             Monitor.Exit(monitorLockClients);
 
-            Clients[id].task = new Task(ContinousRecieve(Clients[id]));
+            Clients[id].task = new Task(ClientHandle(Clients[id]));
             Interlocked.Decrement(ref receptors);
             
 
-            var state = new ValueTuple<Socket, int>(socket, id);
+            //var state = new ValueTuple<Socket, int>(socket, id);
 
             
             
         }
 
-        private Action ContinousRecieve(ClientData clientData)
+        private Action ClientHandle(ClientData clientData)
         {
             while (!exit)
             {
                 try
                 {
+                    if (clientData.dataToSend) {
+                    //    clientData.socket.BeginSend();
+                            }
+
                     clientData.socket.BeginReceive(
                         socketDataBuffer[clientData.i],
                         0,

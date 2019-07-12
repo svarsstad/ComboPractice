@@ -10,6 +10,7 @@ namespace UniverServer
         public Task task;
         public string id; //unique name(hex)
         public int i; //id number/ index number
+        public bool dataToSend = false;
 
         public ClientData(int idn, Socket sc)
         {
