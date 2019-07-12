@@ -1,5 +1,5 @@
 ﻿using System.Net.Sockets;
-using System.Threading;
+using System.Threading.Tasks;
 using System;
 
 namespace UniverServer
@@ -7,13 +7,23 @@ namespace UniverServer
     public class ClientData
     {
         public Socket socket;
-        public Thread thread;
-        public string id;
+        public Task task;
+        public string id; //unique name(hex)
+        public int i; //id number/ index number
 
-        public ClientData(Socket sc)
+        public ClientData(int idn, Socket sc)
         {
             id = Guid.NewGuid().ToString();
             socket = sc;
+            task = null;
+            this.i = idn;
+        }
+        public ClientData(int idn, Socket sc,Task t)
+        {
+            id = Guid.NewGuid().ToString();
+            socket = sc;
+            task = t;
+            this.i = idn;
         }
     }
 }

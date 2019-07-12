@@ -102,7 +102,16 @@ namespace Client
 
             if (!socket.Connected)
             {
-                socket.Connect(serverIPLocalv4, Vars.SERVER_PORT);
+                socket.BeginConnect(
+                    serverIPLocalv4,
+                    Vars.SERVER_PORT,
+                    ConnectionAccepted,
+                    null);
+                while (!connected)
+
+                {
+                    Thread.Sleep(10);
+                }
             }
 
             socket.Send(buffer.ToArray());

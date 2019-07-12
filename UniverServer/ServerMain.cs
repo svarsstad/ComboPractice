@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Linq;
 using SharedVars;
 
@@ -13,7 +14,7 @@ namespace UniverServer
     public class ServerMain
     {
         
-        bool exit = false;
+        static bool exit = false;
         static MainWindow serverMainWindow;
         // Monitor
         public static object monitorLock = new object();
@@ -21,7 +22,7 @@ namespace UniverServer
         // sockets / clients
         int receptors = 0; //number of async callback methods actively awaiting clients
         private Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        static public List<Socket> ClientSockets = new List<Socket>();
+        //static public List<Socket> ClientSockets = new List<Socket>();
         static public List<ClientData> Clients = new List<ClientData>();
         static public List<ClientData> ClientHistory = new List<ClientData>();
         byte[][] socketDataBuffer = new byte[Vars.MAX_CLIENTS][];
@@ -31,8 +32,8 @@ namespace UniverServer
         public string hostName;
         IPHostEntry hostEntry;
 
-        
 
+       
         public string status = "Offline";
 
         public void Run(MainWindow mainWindow)
@@ -50,6 +51,7 @@ namespace UniverServer
             serverSocket.Bind(new IPEndPoint(serverIPLocalv4, Vars.SERVER_PORT));
             serverSocket.Listen(Vars.MAX_CLIENTS);
             
+
             try
             {
                 status = "Online";
@@ -57,8 +59,6 @@ namespace UniverServer
                 ServerMain.serverMainWindow.Refresh_Async();
                 ServerMain.serverMainWindow.SetLog("Welcome back, Commander");
 
-
-                ServerMain.serverMainWindow.SetLog("Listener active");
                 status = "Online";
 
                 ServerMain.serverMainWindow.Refresh_Async();
@@ -89,37 +89,52 @@ namespace UniverServer
             int id;
             Socket socket = serverSocket.EndAccept(callback);
             Monitor.Enter(monitorLockClients);
-            Clients.Add(new ClientData(socket));
-            ClientSockets.Add(socket);
-            id = Clients.Count - 1;
+            id = Clients.Count;
+            Clients.Add(new ClientData(id, socket));
             Monitor.Exit(monitorLockClients);
 
-            Clients[id].thread = Thread.CurrentThread;
+            Clients[id].task = new Task(ContinousRecieve(Clients[id]));
+            Interlocked.Decrement(ref receptors);
             
 
             var state = new ValueTuple<Socket, int>(socket, id);
 
-            socket.BeginReceive(
-                socketDataBuffer[id],
-                0,
-                socketDataBuffer.Length,
-                SocketFlags.None,
-                new AsyncCallback(RecieveCallback),
-                state);
-            Interlocked.Decrement(ref receptors);
             
+            
+        }
+
+        private Action ContinousRecieve(ClientData clientData)
+        {
+            while (!exit)
+            {
+                try
+                {
+                    clientData.socket.BeginReceive(
+                        socketDataBuffer[clientData.i],
+                        0,
+                        socketDataBuffer[clientData.i].Length,
+                        SocketFlags.None,
+                        new AsyncCallback(RecieveCallback),
+                        clientData);
+                } catch(Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+
+            }
+            return null;
         }
 
         private void RecieveCallback(IAsyncResult callback)
         {
             try
             {
-                var state = (ValueTuple<Socket, int>)callback.AsyncState;
-                var socket = state.Item1;
-                int recievedSize = socket.EndReceive(callback);
+                var clientData = (ClientData)callback.AsyncState;
+                
+                int recievedSize = clientData.socket.EndReceive(callback);
                 byte[] dataBuffer = new byte[recievedSize];
 
-                Array.Copy(socketDataBuffer[state.Item2], dataBuffer, recievedSize);
+                Array.Copy(socketDataBuffer[clientData.i], dataBuffer, recievedSize);
 
                 string text = Encoding.ASCII.GetString(dataBuffer);
                 if (recievedSize > 0)
@@ -127,7 +142,7 @@ namespace UniverServer
                     serverMainWindow.SetLog(text);
                     if (text.ToLower() == Vars.CLIENT_SIGN + "wsup")
                     {
-                        SendText("All good.", socket);
+                        SendText("All good.", clientData.socket);
                         serverMainWindow.SetLog("All good.");
                     }
                     else
