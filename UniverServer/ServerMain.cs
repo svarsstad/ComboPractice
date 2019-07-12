@@ -75,7 +75,9 @@ namespace UniverServer
                     {
                         if (!Clients[i].socket.Connected)
                         {
+                            Clients[i].End();
                             Clients.RemoveAt(i);
+                            i--;
                         }
                         else
                         {
@@ -206,7 +208,13 @@ namespace UniverServer
                         SendText("All good.", clientData.socket);
                         serverMainWindow.SetLog("All good.");
                     }
-                    else
+                    else if(text == "~")
+                    {
+                        int i = clientData.i;
+                        
+                        clientData.End();
+                        Clients.RemoveAt(i);
+                    }
                     {
                         //SendText("No Good", socket); //the good reply is overwritten by this
                         serverMainWindow.SetLog("No Good");

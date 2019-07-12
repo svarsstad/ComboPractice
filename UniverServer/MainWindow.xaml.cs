@@ -118,7 +118,9 @@ namespace UniverServer
             His_Del.IsEnabled = false;
         }
 
-        private void Cli_Sen_Click(object sender, RoutedEventArgs e) { }
+        private void Cli_Sen_Click(object sender, RoutedEventArgs e) {
+            serverMainInstance.SendText(Cli_Mes.Text, Cli_Lis.SelectedIndex);
+        }
 
         private void Bro_Sen_Click(object sender, RoutedEventArgs e) {
             //Task.Run(() => serverMainInstance.SendTextAll(Bro_Mes.Text));

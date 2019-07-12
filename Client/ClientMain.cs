@@ -126,6 +126,7 @@ namespace Client
         }
         public void End()
         {
+            Send("~");
             exit = true;
             socket.Disconnect(false);
         }
