@@ -31,5 +31,9 @@ namespace UniverServer
             socket.Disconnect(false);
             task.Dispose();
         }
+        ~ClientData()
+        {
+            End();
+        }
     }
 }

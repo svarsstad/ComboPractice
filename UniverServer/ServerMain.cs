@@ -241,7 +241,10 @@ namespace UniverServer
                 Console.WriteLine(e);
             }
         }
-
+        ~ServerMain()
+        {
+            End();
+        }
         public void End()
         {
             exit = true;

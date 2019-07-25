@@ -130,5 +130,10 @@ namespace Client
             exit = true;
             socket.Disconnect(false);
         }
+        ~ClientMain()
+        {
+
+            End();
+        }
     }
 }

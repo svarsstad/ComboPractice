@@ -190,8 +190,15 @@ namespace UniverServer
                 }
             }
         }
-
+        ~MainWindow()
+        {
+            End();
+        }
         protected virtual void OnExit(ExitEventArgs e)
+        {
+            End();
+        }
+        public void End()
         {
             serverMainInstance.End();
         }

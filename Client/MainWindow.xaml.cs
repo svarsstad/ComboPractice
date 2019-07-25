@@ -43,9 +43,19 @@ namespace Client
                 sys_mes.Text = text);
             return null;
         }
-        protected virtual void OnExit(ExitEventArgs e)
+        ~MainWindow()
+        {
+            End();
+        }
+
+        public void End()
         {
             clientBackend.End();
+        }
+
+        protected virtual void OnExit(ExitEventArgs e)
+        {
+            End();
         }
 
     }
