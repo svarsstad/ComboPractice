@@ -22,7 +22,7 @@ namespace Client
         private Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
 
-        public void Run(MainWindow CMW)
+        public void Run(MainWindow CMW, CancellationToken BacklineCanselToken)
         {
             clientMainWindow = CMW;
             hostName = Dns.GetHostName();
@@ -36,7 +36,7 @@ namespace Client
                 //socket.Connect(serverIPLocalv4, Vars.serverPort);
                 socket.BeginConnect(serverIPLocalv4, Vars.SERVER_PORT, ConnectionAccepted, null);
 
-                while (!connected)
+                while (!connected && !BacklineCanselToken.IsCancellationRequested)
 
                 {
                     Thread.Sleep(10); 
@@ -48,7 +48,7 @@ namespace Client
 
             }
             clientMainWindow.Set_Sys_Mes("Connected");
-            while (!exit)
+            while (!exit && !BacklineCanselToken.IsCancellationRequested)
             {
                 try
                 {
@@ -126,10 +126,16 @@ namespace Client
         }
         public void End()
         {
-            Send("~");
+            if (socket.Connected)
+            {
+                Span<byte> buffer = stackalloc byte[sizeof(char)];
+                buffer = Encoding.ASCII.GetBytes("~");
+                socket.Send(buffer.ToArray());
+                socket.Disconnect(false);
+            }
             exit = true;
-            socket.Disconnect(false);
         }
+
         ~ClientMain()
         {
 

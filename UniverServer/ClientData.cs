@@ -28,8 +28,14 @@ namespace UniverServer
         }
         public void End()
         {
-            socket.Disconnect(false);
-            task.Dispose();
+            if (socket.Connected)
+            {
+                socket.Disconnect(false);
+            }
+            if (task != null)
+            {
+                task.Dispose();
+            }
         }
         ~ClientData()
         {

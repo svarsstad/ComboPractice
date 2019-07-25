@@ -5,7 +5,7 @@ using System.Text;
 using System.Windows;
 using System.Linq;
 using System.Threading.Tasks;
-
+using System.Threading;
 
 namespace Client
 {
@@ -16,7 +16,9 @@ namespace Client
     {
 
 
-
+        Task BacklineTask;
+        static CancellationTokenSource BacklineCanselTokenSource = new CancellationTokenSource();
+        static CancellationToken BacklineCanselToken = BacklineCanselTokenSource.Token;
         ClientMain clientBackend = new ClientMain();
         //public string status = "Offline";
 
@@ -26,8 +28,7 @@ namespace Client
         public MainWindow()
         {
             InitializeComponent();
-
-            Task.Run(() => clientBackend.Run(this));
+            BacklineTask = Task.Run(() => clientBackend.Run(this, BacklineCanselToken));
 
         }
 
@@ -50,7 +51,7 @@ namespace Client
 
         public void End()
         {
-            clientBackend.End();
+            BacklineCanselTokenSource.Cancel();
         }
 
         protected virtual void OnExit(ExitEventArgs e)

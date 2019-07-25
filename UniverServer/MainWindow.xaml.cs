@@ -10,6 +10,9 @@ namespace UniverServer
     public partial class MainWindow : Window
     {
         public ServerMain serverMainInstance = new ServerMain();
+        Task BacklineTask;
+        static CancellationTokenSource BacklineCanselTokenSource = new CancellationTokenSource();
+        static CancellationToken BacklineCanselToken = BacklineCanselTokenSource.Token;
 
         public MainWindow()
         {
@@ -29,7 +32,7 @@ namespace UniverServer
                 "hostName:\t\t" + serverMainInstance.hostName + '\n' +
                 "Status:\t\t\t" + serverMainInstance.status;
 
-            Task.Run(() => serverMainInstance.Run(this));
+            BacklineTask = Task.Run(() => serverMainInstance.Run(this, BacklineCanselToken));
         }
 
         public Action Refresh_Async()
@@ -200,7 +203,7 @@ namespace UniverServer
         }
         public void End()
         {
-            serverMainInstance.End();
+            BacklineCanselTokenSource.Cancel();
         }
     }
 }

@@ -36,7 +36,7 @@ namespace UniverServer
        
         public string status = "Offline";
 
-        public void Run(MainWindow mainWindow)
+        public void Run(MainWindow mainWindow, CancellationToken BacklineCanselToken)
         {
             for (int i = 0; i < Vars.MAX_CLIENTS; i++){
                 socketDataBuffer[i] = new byte[Vars.BUFFER_SIZE];
@@ -63,7 +63,7 @@ namespace UniverServer
 
                 ServerMain.serverMainWindow.Refresh_Async();
 
-                while (exit != true)
+                while (exit != true && !BacklineCanselToken.IsCancellationRequested)
                 {
                     if (Vars.MAX_CLIENTS >= receptors)
                     {
