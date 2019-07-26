@@ -28,7 +28,7 @@ namespace UniverServer
         }
         public void End()
         {
-            if (socket.Connected)
+            if (socket != null && socket.Connected)
             {
                 socket.Disconnect(false);
             }

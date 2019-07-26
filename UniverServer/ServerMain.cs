@@ -58,9 +58,6 @@ namespace UniverServer
 
             try
             {
-                status = "Online";
-
-                ServerMain.serverMainWindow.Refresh_Async();
                 ServerMain.serverMainWindow.SetLog("Welcome back, Commander");
 
                 status = "Online";
@@ -79,9 +76,7 @@ namespace UniverServer
                     {
                         if (!Clients[i].socket.Connected)
                         {
-                            Clients[i].End();
-                            Clients.RemoveAt(i);
-                            i--;
+                            RemoveClient(i);
                         }
                         else
                         {
@@ -98,6 +93,7 @@ namespace UniverServer
             }
             finally
             {
+                End();
                 ServerMain.serverMainWindow.SetLog("Exiting...");
                 status = "Offline";
                 ServerMain.serverMainWindow.SetLog("server shutdown");
@@ -117,10 +113,19 @@ namespace UniverServer
 
             Monitor.Exit(monitorLockClients);
 
-            
 
-            Clients[id].task = new Task(ClientHandle(Clients[id], ClientCanselTokens[id]));
-            Interlocked.Decrement(ref receptors);
+            if (Clients[id] != null)
+            {
+                try
+                {
+                    Clients[id].task = new Task(ClientHandle(Clients[id], ClientCanselTokens[id]));
+                    Interlocked.Decrement(ref receptors);
+                }
+                catch(Exception e)
+                {
+                    System.Console.WriteLine(e);
+                }
+            }
             
 
             //var state = new ValueTuple<Socket, int>(socket, id);
@@ -129,7 +134,7 @@ namespace UniverServer
             
         }
 
-        private Action ClientHandle(ClientData clientData, CancellationToken cancellationToken)
+            private Action ClientHandle(ClientData clientData, CancellationToken cancellationToken)
         {
             while (!exit && !cancellationToken.IsCancellationRequested)
             {
@@ -165,11 +170,14 @@ namespace UniverServer
                 text = Vars.SERVER_SIGN + text;
                 Span<byte> dataReply = stackalloc byte[text.Length * 2];
                 dataReply = Encoding.ASCII.GetBytes(text);
-                for (int i = 0; i < Clients.Count-1; i++)
+                for (int i = 0; i < Clients.Count; i++)
                 {
                     try
                     {
-                        Clients[i].socket.Send(dataReply.ToArray());
+                        if (Clients[i] != null)
+                        {
+                            Clients[i].socket.Send(dataReply.ToArray());
+                        }
                     }
                     catch (Exception e)
                     {
@@ -224,7 +232,7 @@ namespace UniverServer
                     }
                     {
                         //SendText("No Good", socket); //the good reply is overwritten by this
-                        serverMainWindow.SetLog("No Good");
+                        serverMainWindow.SetLog("No Good "+ clientData.i);
                     }
                 }
             }
@@ -267,7 +275,10 @@ namespace UniverServer
             for (int i = 0; i < Clients.Count-1; i++)
             {
                 ClientCanselTokenSources[i].Cancel();
-                Clients[i].End();
+                if (Clients[i] != null)
+                {
+                    Clients[i].End();
+                }
             }
         }
     }
