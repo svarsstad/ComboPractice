@@ -25,6 +25,10 @@ namespace UniverServer
         //static public List<Socket> ClientSockets = new List<Socket>();
         static public List<ClientData> Clients = new List<ClientData>();
         static public List<ClientData> ClientHistory = new List<ClientData>();
+        static public List<CancellationTokenSource> ClientCanselTokenSources = new List<CancellationTokenSource>();
+        static public List<CancellationToken> ClientCanselTokens = new List<CancellationToken>();
+        
+
         byte[][] socketDataBuffer = new byte[Vars.MAX_CLIENTS][];
         
         //network
@@ -107,9 +111,15 @@ namespace UniverServer
             Monitor.Enter(monitorLockClients);
             id = Clients.Count;
             Clients.Add(new ClientData(id, socket));
+            ClientCanselTokenSources.Add(new CancellationTokenSource());
+            ClientCanselTokens.Add(ClientCanselTokenSources[id].Token);
+
+
             Monitor.Exit(monitorLockClients);
 
-            Clients[id].task = new Task(ClientHandle(Clients[id]));
+            
+
+            Clients[id].task = new Task(ClientHandle(Clients[id], ClientCanselTokens[id]));
             Interlocked.Decrement(ref receptors);
             
 
@@ -119,9 +129,9 @@ namespace UniverServer
             
         }
 
-        private Action ClientHandle(ClientData clientData)
+        private Action ClientHandle(ClientData clientData, CancellationToken cancellationToken)
         {
-            while (!exit)
+            while (!exit && !cancellationToken.IsCancellationRequested)
             {
                 try
                 {
@@ -210,10 +220,7 @@ namespace UniverServer
                     }
                     else if(text == "~")
                     {
-                        int i = clientData.i;
-                        
-                        clientData.End();
-                        Clients.RemoveAt(i);
+                        RemoveClient(clientData.i);
                     }
                     {
                         //SendText("No Good", socket); //the good reply is overwritten by this
@@ -225,6 +232,15 @@ namespace UniverServer
             {
                 Console.WriteLine(e);
             }
+        }
+        private void RemoveClient(int index)
+        {
+            Monitor.Enter(monitorLock);
+            ClientCanselTokenSources[index].Cancel();
+            Clients[index].End();
+
+            Clients[index] = null;
+            Monitor.Exit(monitorLock);
         }
 
         private void SendText (string text, Socket socket)
@@ -250,6 +266,7 @@ namespace UniverServer
             exit = true;
             for (int i = 0; i < Clients.Count-1; i++)
             {
+                ClientCanselTokenSources[i].Cancel();
                 Clients[i].End();
             }
         }
