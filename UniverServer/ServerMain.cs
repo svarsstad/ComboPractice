@@ -26,7 +26,7 @@ namespace UniverServer
         static public List<ClientData> Clients = new List<ClientData>();
         static public List<ClientData> ClientHistory = new List<ClientData>();
         static public List<CancellationTokenSource> ClientCanselTokenSources = new List<CancellationTokenSource>();
-        static public List<CancellationToken> ClientCanselTokens = new List<CancellationToken>();
+        //static public List<CancellationToken> ClientCanselTokens = new List<CancellationToken>();
         
 
         byte[][] socketDataBuffer = new byte[Vars.MAX_CLIENTS][];
@@ -93,10 +93,11 @@ namespace UniverServer
             }
             finally
             {
-                End();
+                
                 ServerMain.serverMainWindow.SetLog("Exiting...");
                 status = "Offline";
                 ServerMain.serverMainWindow.SetLog("server shutdown");
+                serverMainWindow.Dispatcher.InvokeAsync(serverMainWindow.EndAction());
             }
         }
 
@@ -106,10 +107,10 @@ namespace UniverServer
             Socket socket = serverSocket.EndAccept(callback);
             Monitor.Enter(monitorLockClients);
             id = Clients.Count;
-            Clients.Add(new ClientData(id, socket));
+            
             ClientCanselTokenSources.Add(new CancellationTokenSource());
-            ClientCanselTokens.Add(ClientCanselTokenSources[id].Token);
-
+            //ClientCanselTokens.Add(ClientCanselTokenSources[id].Token);
+            Clients.Add(new ClientData(id, socket, ClientCanselTokenSources[id].Token));
 
             Monitor.Exit(monitorLockClients);
 
@@ -118,7 +119,7 @@ namespace UniverServer
             {
                 try
                 {
-                    Clients[id].task = new Task(ClientHandle(Clients[id], ClientCanselTokens[id]));
+                    Clients[id].task = new Task(ClientHandle(Clients[id]));
                     Interlocked.Decrement(ref receptors);
                 }
                 catch(Exception e)
@@ -134,16 +135,12 @@ namespace UniverServer
             
         }
 
-            private Action ClientHandle(ClientData clientData, CancellationToken cancellationToken)
+            private Action ClientHandle(ClientData clientData)
         {
-            while (!exit && !cancellationToken.IsCancellationRequested)
+            while (!exit && clientData!= null && !clientData.cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                   
-                    if (clientData.dataToSend) {
-                    //    clientData.socket.BeginSend();
-                            }
 
                     clientData.socket.BeginReceive(
                         socketDataBuffer[clientData.i],
@@ -174,7 +171,7 @@ namespace UniverServer
                 {
                     try
                     {
-                        if (Clients[i] != null)
+                        if (Clients[i] != null && !Clients[i].cancellationToken.IsCancellationRequested)
                         {
                             Clients[i].socket.Send(dataReply.ToArray());
                         }
@@ -190,17 +187,20 @@ namespace UniverServer
         {
             Task.Run(() =>
             {
-                text = Vars.SERVER_SIGN + text;
-                Span<byte> dataReply = stackalloc byte[text.Length * 2];
-                dataReply = Encoding.ASCII.GetBytes(text);
+                if (Clients[clientIndex] != null && !Clients[clientIndex].cancellationToken.IsCancellationRequested)
+                {
+                    text = Vars.SERVER_SIGN + text;
+                    Span<byte> dataReply = stackalloc byte[text.Length * 2];
+                    dataReply = Encoding.ASCII.GetBytes(text);
 
-                try
-                {
-                    Clients[clientIndex].socket.Send(dataReply.ToArray());
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
+                    try
+                    {
+                        Clients[clientIndex].socket.Send(dataReply.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
                 }
             }
             );
@@ -211,6 +211,10 @@ namespace UniverServer
             try
             {
                 var clientData = (ClientData)callback.AsyncState;
+                if (clientData.cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
                 
                 int recievedSize = clientData.socket.EndReceive(callback);
                 byte[] dataBuffer = new byte[recievedSize];
@@ -226,10 +230,11 @@ namespace UniverServer
                         SendText("All good.", clientData.socket);
                         serverMainWindow.SetLog("All good.");
                     }
-                    else if(text == "~")
+                    else if(text == Vars.CLIENT_SIGN + "~")
                     {
                         RemoveClient(clientData.i);
                     }
+                    else
                     {
                         //SendText("No Good", socket); //the good reply is overwritten by this
                         serverMainWindow.SetLog("No Good "+ clientData.i);

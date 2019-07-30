@@ -141,14 +141,20 @@ namespace UniverServer
 
             foreach (ClientData cli in ServerMain.Clients)
             {
-                Cli_Lis.Items.Add(new ListBoxItem());
-                (Cli_Lis.Items[Cli_Lis.Items.Count - 1] as ListBoxItem).Content = cli.id;
+                if (cli != null)
+                {
+                    Cli_Lis.Items.Add(new ListBoxItem());
+                    (Cli_Lis.Items[Cli_Lis.Items.Count - 1] as ListBoxItem).Content = cli.id;
+                }
             }
 
             foreach (ClientData his in ServerMain.ClientHistory)
             {
-                His_Lis.Items.Add(new ListBoxItem());
-                (His_Lis.Items[His_Lis.Items.Count - 1] as ListBoxItem).Content = his.id;
+                if (his != null)
+                {
+                    His_Lis.Items.Add(new ListBoxItem());
+                    (His_Lis.Items[His_Lis.Items.Count - 1] as ListBoxItem).Content = his.id;
+                }
             }
 
             Monitor.Exit(ServerMain.monitorLock);
@@ -199,11 +205,21 @@ namespace UniverServer
         }
         protected virtual void OnExit(ExitEventArgs e)
         {
-            End();
-        }
-        public void End()
-        {
             BacklineCanselTokenSource.Cancel();
         }
+        public Action EndAction()
+        {
+            End();
+            return null;
+        }
+
+        private void End()
+        {
+            
+            OnExit(null);
+        }
+               
+            //return null;
+
     }
 }

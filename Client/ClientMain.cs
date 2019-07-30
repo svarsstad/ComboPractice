@@ -59,6 +59,7 @@ namespace Client
                     Console.WriteLine(e);
                 }
             }
+            clientMainWindow.Dispatcher.InvokeAsync(clientMainWindow.EndAction());
         }
 
         private void ConnectionAccepted(IAsyncResult callback)
@@ -134,6 +135,7 @@ namespace Client
                 socket.Disconnect(false);
             }
             exit = true;
+            clientMainWindow.EndAction();
         }
 
         ~ClientMain()

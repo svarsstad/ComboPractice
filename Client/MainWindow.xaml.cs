@@ -48,15 +48,20 @@ namespace Client
         {
             End();
         }
-
-        public void End()
+        public Action EndAction()
         {
-            BacklineCanselTokenSource.Cancel();
+            End();
+            return null;
+        }
+        private void End()
+        {
+            
+            OnExit(null);
         }
 
         protected virtual void OnExit(ExitEventArgs e)
         {
-            End();
+            BacklineCanselTokenSource.Cancel();
         }
 
     }
