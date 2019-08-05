@@ -217,27 +217,27 @@ namespace UniverServer
                 }
                 
                 int recievedSize = clientData.socket.EndReceive(callback);
-                byte[] dataBuffer = new byte[recievedSize];
+                Span<byte> dataBuffer = stackalloc byte[recievedSize];
 
-                Array.Copy(socketDataBuffer[clientData.i], dataBuffer, recievedSize);
 
-                string text = Encoding.ASCII.GetString(dataBuffer);
+                string text = Encoding.ASCII.GetString(dataBuffer.ToArray(), Vars.CLIENT_SIGN.Length, recievedSize);
                 if (recievedSize > 0)
                 {
                     serverMainWindow.SetLog(text);
-                    if (text.ToLower() == Vars.CLIENT_SIGN + "wsup")
+                    if ( dataBuffer[0] == Vars.CLIENT_SIGN[0] )
                     {
                         SendText("All good.", clientData.socket);
                         serverMainWindow.SetLog("All good.");
                     }
-                    else if(text == Vars.CLIENT_SIGN + "~")
+                    else if(text == "~")
                     {
                         RemoveClient(clientData.i);
                     }
                     else
                     {
-                        //SendText("No Good", socket); //the good reply is overwritten by this
-                        serverMainWindow.SetLog("No Good "+ clientData.i);
+                        ///do nothing. this is a message sendt by the server to a client on the same device
+                        //SendText("No Good", socket); 
+                        //serverMainWindow.SetLog("No Good "+ clientData.i);
                     }
                 }
             }
