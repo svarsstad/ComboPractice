@@ -210,7 +210,8 @@ namespace UniverServer
         public Action EndAction()
         {
             End();
-            return null;
+
+            return delegate() { };
         }
 
         private void End()

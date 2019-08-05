@@ -74,13 +74,17 @@ namespace UniverServer
                     Monitor.Enter(monitorLock);
                     for( int i = 0;  i < Clients.Count-1; i ++)
                     {
-                        if (!Clients[i].socket.Connected)
+                        if (Clients[i] != null)
                         {
-                            RemoveClient(i);
-                        }
-                        else
-                        {
-                            Clients[i].i = i;
+                            if (!Clients[i].socket.Connected)
+                            {
+                                RemoveClient(i);
+                            }
+                            else
+                            {
+
+                                Clients[i].i = i;
+                            }
                         }
                     }
 
