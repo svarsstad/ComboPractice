@@ -22,11 +22,9 @@ namespace UniverServer
         // sockets / clients
         int receptors = 0; //number of async callback methods actively awaiting clients
         private Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        //static public List<Socket> ClientSockets = new List<Socket>();
         static public List<ClientData> Clients = new List<ClientData>();
         static public List<ClientData> ClientHistory = new List<ClientData>();
         static public List<CancellationTokenSource> ClientCanselTokenSources = new List<CancellationTokenSource>();
-        //static public List<CancellationToken> ClientCanselTokens = new List<CancellationToken>();
         
 
         byte[][] socketDataBuffer = new byte[Vars.MAX_CLIENTS][];
@@ -236,7 +234,7 @@ namespace UniverServer
                             return;
                         }
                         SendText("All good.", clientData.socket);
-                        serverMainWindow.SetLog(text);
+                        serverMainWindow.SetLog(clientData.i +": " +text);
                     }
                     else
                     {
