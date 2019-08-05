@@ -218,20 +218,21 @@ namespace UniverServer
                 
                 int recievedSize = clientData.socket.EndReceive(callback);
                 Span<byte> dataBuffer = stackalloc byte[recievedSize];
+                dataBuffer = socketDataBuffer[clientData.i];
 
-
-                string text = Encoding.ASCII.GetString(dataBuffer.ToArray(), Vars.CLIENT_SIGN.Length, recievedSize);
+                string text = Encoding.ASCII.GetString(dataBuffer.ToArray(), Vars.CLIENT_SIGN.Length, recievedSize - Vars.CLIENT_SIGN.Length);
                 if (recievedSize > 0)
                 {
-                    serverMainWindow.SetLog(text);
                     if ( dataBuffer[0] == Vars.CLIENT_SIGN[0] )
                     {
+                        if (text == "~")
+                        {
+                            RemoveClient(clientData.i);
+                            serverMainWindow.SetLog(clientData.i + " Removed");
+                            return;
+                        }
                         SendText("All good.", clientData.socket);
-                        serverMainWindow.SetLog("All good.");
-                    }
-                    else if(text == "~")
-                    {
-                        RemoveClient(clientData.i);
+                        serverMainWindow.SetLog(text);
                     }
                     else
                     {

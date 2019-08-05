@@ -17,7 +17,7 @@ namespace Client
 
 
         Task BacklineTask;
-        static CancellationTokenSource BacklineCanselTokenSource = new CancellationTokenSource();
+        public static CancellationTokenSource BacklineCanselTokenSource = new CancellationTokenSource();
         static CancellationToken BacklineCanselToken = BacklineCanselTokenSource.Token;
         ClientMain clientBackend = new ClientMain();
         //public string status = "Offline";

@@ -78,7 +78,7 @@ namespace Client
                 buffer = Databuffer;
                 if (recievedSize > 0)
                 {
-                    string text = Encoding.ASCII.GetString(buffer.ToArray(),Vars.CLIENT_SIGN.Length, recievedSize);
+                    string text = Encoding.ASCII.GetString(buffer.ToArray(),Vars.CLIENT_SIGN.Length, recievedSize- Vars.CLIENT_SIGN.Length);
                     if (buffer[0] == Vars.SERVER_SIGN[0])
                     {
                         clientMainWindow.Set_Sys_Mes(text);
@@ -96,32 +96,24 @@ namespace Client
         }
         public void Send(string text)
         {
-            Task.Run(() => {
-                Span<byte> buffer = stackalloc byte[text.Length + 4];
-                buffer = Encoding.ASCII.GetBytes(Vars.CLIENT_SIGN + text);
-
-                if (!socket.Connected)
+            Task.Run(() =>
+            {
+                if (!MainWindow.BacklineCanselTokenSource.IsCancellationRequested)
                 {
-                    socket.BeginConnect(
-                        serverIPLocalv4,
-                        Vars.SERVER_PORT,
-                        ConnectionAccepted,
-                        null);
-                    while (!connected)
+                    Span<byte> dataReply = stackalloc byte[text.Length * 2];
+                    dataReply = Encoding.ASCII.GetBytes(Vars.CLIENT_SIGN + text);
 
+                    try
                     {
-                        Thread.Sleep(10);
+                        socket.Send(dataReply.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
                     }
                 }
-                try
-                {
-                    socket.BeginSend(buffer.ToArray(), 0, buffer.Length, SocketFlags.None, null, null);
-                }
-                catch (Exception e)
-                {
-                    System.Console.WriteLine(e);
-                }
-            });
+            }
+             );
         }
         public void End()
         {
@@ -130,7 +122,8 @@ namespace Client
                 Span<byte> buffer = stackalloc byte[sizeof(char)];
                 buffer = Encoding.ASCII.GetBytes("~");
                 socket.Send(buffer.ToArray());
-                socket.Disconnect(false);
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Disconnect(true);
             }
             exit = true;
             clientMainWindow.EndAction();

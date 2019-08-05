@@ -11,7 +11,7 @@ namespace UniverServer
     {
         public ServerMain serverMainInstance = new ServerMain();
         Task BacklineTask;
-        static CancellationTokenSource BacklineCanselTokenSource = new CancellationTokenSource();
+        public static CancellationTokenSource BacklineCanselTokenSource = new CancellationTokenSource();
         static CancellationToken BacklineCanselToken = BacklineCanselTokenSource.Token;
 
         public MainWindow()
