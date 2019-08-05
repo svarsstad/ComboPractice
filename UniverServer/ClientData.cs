@@ -36,7 +36,8 @@ namespace UniverServer
             {
                 try
                 {
-                    socket.Disconnect(false);
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Disconnect(true);
                 }
                 catch (SocketException e)
                 {

@@ -76,12 +76,10 @@ namespace Client
 
                 Span<byte> buffer = stackalloc byte[recievedSize];
                 buffer = Databuffer;
-
-                string text = Encoding.ASCII.GetString(buffer.ToArray());
                 if (recievedSize > 0)
                 {
-                    clientMainWindow.Set_Sys_Mes(text);
-                    if (text.ToLower().StartsWith(Vars.SERVER_SIGN))
+                    string text = Encoding.ASCII.GetString(buffer.ToArray(),Vars.CLIENT_SIGN.Length, recievedSize);
+                    if (buffer[0] == Vars.SERVER_SIGN[0])
                     {
                         clientMainWindow.Set_Sys_Mes(text);
                     }

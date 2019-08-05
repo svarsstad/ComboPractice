@@ -285,6 +285,15 @@ namespace UniverServer
                     Clients[i].End();
                 }
             }
+            try
+            {
+                serverSocket.Shutdown(SocketShutdown.Both);
+                serverSocket.Disconnect(true);
+            }
+            catch(SocketException e)
+            {
+                System.Console.WriteLine(e);
+            }
         }
     }
 }
