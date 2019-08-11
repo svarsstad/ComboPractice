@@ -42,7 +42,7 @@ namespace UniverServer
             SB.Append(" WHERE ID");
 
             SqlCommand comm = new SqlCommand(SB.ToString(), sqlConn);
-            comm.ExecuteNonQuery();
+            mainWindow.SetLog("rows affected" + comm.ExecuteNonQuery());
             return null;
         }
 
