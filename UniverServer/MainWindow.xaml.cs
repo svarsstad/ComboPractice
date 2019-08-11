@@ -4,13 +4,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Configuration;
 
 namespace UniverServer
 {
     public partial class MainWindow : Window
     {
+        public DatabaseManager databaseManagerInstance = new DatabaseManager();
         public ServerMain serverMainInstance = new ServerMain();
         Task BacklineTask;
+        Task BacklineDatabaseTask;
         public static CancellationTokenSource BacklineCanselTokenSource = new CancellationTokenSource();
         static CancellationToken BacklineCanselToken = BacklineCanselTokenSource.Token;
 
@@ -32,7 +35,9 @@ namespace UniverServer
                 "hostName:\t\t" + serverMainInstance.hostName + '\n' +
                 "Status:\t\t\t" + serverMainInstance.status;
 
+            BacklineDatabaseTask = Task.Run(() => databaseManagerInstance.Run(this, BacklineCanselToken));
             BacklineTask = Task.Run(() => serverMainInstance.Run(this, BacklineCanselToken));
+
         }
 
         public Action Refresh_Async()
@@ -138,7 +143,6 @@ namespace UniverServer
             His_Lis.Items.Clear();
 
             Monitor.Enter(ServerMain.monitorLock);
-
             foreach (ClientData cli in ServerMain.Clients)
             {
                 if (cli != null)

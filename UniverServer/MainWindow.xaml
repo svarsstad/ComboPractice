@@ -17,10 +17,6 @@
             <Border Height="10"></Border>
             <TextBlock> Client list</TextBlock>
             <ListBox MaxHeight="100" x:Name="Cli_Lis" SelectionChanged="Cli_Lis_SelectionChanged">
-                <ListBoxItem>cl1</ListBoxItem>
-                <ListBoxItem>cl2</ListBoxItem>
-                <ListBoxItem>cl3</ListBoxItem>
-                <ListBoxItem>cl4</ListBoxItem>
             </ListBox>
             <Grid>
                 <Grid.ColumnDefinitions>
