@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Configuration;
+using System.Data;
 
 namespace UniverServer
 {
@@ -53,6 +54,8 @@ namespace UniverServer
                 Ser_Log.Text += logEntry + '\n');
             return null;
         }
+
+
 
         private void Cli_Del_Click(object sender, RoutedEventArgs eventArgs)
         {
@@ -223,8 +226,9 @@ namespace UniverServer
             
             OnExit(null);
         }
-               
-            //return null;
+
+
+
 
     }
 }
