@@ -19,6 +19,7 @@ namespace UniverServer
         SqlConnection sqlConn;
         public static object monitorDBLock = new object();
         String[] Tables = { "PlayerTable", "Areas" };
+        String[][] Columns;
         void setup()
         {
             String str = ConfigurationManager.ConnectionStrings["UniverServer.Properties.Settings.DatabaseConnectionString"].ConnectionString;
@@ -28,6 +29,16 @@ namespace UniverServer
                 sqlConn.Open();
                 //myCommand.ExecuteNonQuery();
                 mainWindow.SetLog("DataBase is Created Successfully");
+                System.Data.DataTable a = sqlConn.GetSchema("Tables");
+                System.Data.DataTable b = sqlConn.GetSchema("Columns");
+
+                Columns = new string[Tables.Length][];
+                int i = 0;
+                if(i < Columns.Length)
+                { 
+                    Columns[i] = new string[4]{ "","","","" };
+                    i++;
+                }
             }
             catch (System.Exception ex)
             {
@@ -39,7 +50,9 @@ namespace UniverServer
             System.Text.StringBuilder SB = new StringBuilder();
             SB.Append("UPDATE ");
             SB.Append(Tables[table]);
-            SB.Append(" WHERE ID");
+            SB.Append(" WHERE ID = ");
+            SB.Append(index);
+            SB.Append(Columns[table][column]);
 
             SqlCommand comm = new SqlCommand(SB.ToString(), sqlConn);
             mainWindow.SetLog("rows affected" + comm.ExecuteNonQuery());
