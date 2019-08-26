@@ -277,6 +277,11 @@ namespace UniverServer
         {
             End();
         }
+        public Action EndSession(int id)
+        {
+            serverMainWindow.databaseManagerInstance.EndSession(id);
+            return null;
+        }
         public void End()
         {
             exit = true;

@@ -56,6 +56,25 @@ namespace UniverServer
 
 
         }
+        public Action EndSession(int id)
+        {
+            int table = 0;
+            int column = 5; 
+            Span<byte> value = stackalloc byte[4]; // 2 chars X 2 bytes
+            value = Encoding.ASCII.GetBytes("-1");
+            SQLSetData(table, column, id, value);
+            return null;
+        }
+        public Action SetSession(int id,int clientId)
+        {
+            int table = 0;
+            int column = 2; //figure this stuff out
+            int textByteSize= ((int)Math.Floor(Math.Log10(clientId) + 1)) * 2;
+            Span<byte> value = stackalloc byte[textByteSize];
+            value = Encoding.ASCII.GetBytes(clientId.ToString());
+            SQLSetData(table, column, id, value);
+            return null;
+        }
         public Action SQLSetData(int table, int column,int index,Span<byte> value)
         {
             System.Text.StringBuilder SB = new StringBuilder();
@@ -67,6 +86,29 @@ namespace UniverServer
             SB.Append(value.ToString());
             SB.Append(" WHERE ID = ");
             SB.Append(index);
+
+            using (sqlConn)
+            {
+                sqlConn.Open();
+                sqlComm = new SqlCommand(SB.ToString(), sqlConn);
+                mainWindow.SetLog("rows affected" + sqlComm.ExecuteNonQuery());
+                sqlConn.Close();
+            }
+            return null;
+        }
+
+        public Action SQLInsertData(int table, List<string> values)
+        {
+            System.Text.StringBuilder SB = new StringBuilder();
+            SB.Append("INSERT INTO ");
+            SB.Append(Tables[table]);
+            SB.Append(" VALUES(");
+            for(int i = 0; i < values.Count() -1; i++)
+            {
+                SB.Append(values[i] + ", ");
+
+            }
+            SB.Append(values[values.Count()] + ")");
 
             using (sqlConn)
             {

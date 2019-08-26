@@ -10,6 +10,7 @@ namespace UniverServer
         public Socket socket;
         public Task task;
         public string id; //unique name(hex)
+        private int sessionId = -1;
         public int i; //id number/ index number
         public bool dataToSend = false;
         public CancellationToken cancellationToken;
