@@ -1,29 +1,25 @@
-﻿using System.Threading.Tasks;
-using System;
-using System.Threading;
-using System.Data.SqlClient;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using SharedVars;
 using System.Configuration;
 using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Text;
+using System.Threading;
 
 namespace UniverServer
-    
 
 {
-    public class DatabaseManager
+    public class DatabaseManager : IDisposable
     {
-        MainWindow mainWindow;
-        SqlConnection sqlConn;
-        SqlCommand sqlComm;
+        private MainWindow mainWindow;
+        private SqlConnection sqlConn;
+        private SqlCommand sqlComm;
         public static object monitorDBLock = new object();
-        String[] Tables = { "PlayerTable", "Areas" };
-        String[][] Columns;
+        private String[] Tables = { "PlayerTable", "Areas" };
+        private String[][] Columns;
 
-        void setup()
+        private void setup()
         {
             String str = ConfigurationManager.ConnectionStrings["UniverServer.Properties.Settings.DatabaseConnectionString"].ConnectionString;
             sqlConn = new SqlConnection(str);
@@ -35,13 +31,13 @@ namespace UniverServer
                 using (sqlConn)
                 {
                     sqlConn.Open();
-                    for (int tableIndex = 0; tableIndex < Tables.Length; tableIndex++) {
+                    for (int tableIndex = 0; tableIndex < Tables.Length; tableIndex++)
+                    {
                         restrictions[2] = Tables[tableIndex];
                         columnList = sqlConn.GetSchema("Columns", restrictions).AsEnumerable().Select(s => s.Field<String>("Column_Name")).ToArray();
                         Columns[tableIndex] = new string[columnList.Length];
                         Array.Copy(columnList, Columns[tableIndex], columnList.Length);
                     }
-
                 }
                 mainWindow.SetLog("DataBase Assimulated");
             }
@@ -53,29 +49,30 @@ namespace UniverServer
             {
                 sqlConn.Close();
             }
-
-
         }
+
         public Action EndSession(int id)
         {
             int table = 0;
-            int column = 5; 
+            int column = 5;
             Span<byte> value = stackalloc byte[4]; // 2 chars X 2 bytes
             value = Encoding.ASCII.GetBytes("-1");
             SQLSetData(table, column, id, value);
             return null;
         }
-        public Action SetSession(int id,int clientId)
+
+        public Action SetSession(int id, int clientId)
         {
             int table = 0;
             int column = 2; //figure this stuff out
-            int textByteSize= ((int)Math.Floor(Math.Log10(clientId) + 1)) * 2;
+            int textByteSize = ((int)Math.Floor(Math.Log10(clientId) + 1)) * 2;
             Span<byte> value = stackalloc byte[textByteSize];
             value = Encoding.ASCII.GetBytes(clientId.ToString());
             SQLSetData(table, column, id, value);
             return null;
         }
-        public Action SQLSetData(int table, int column,int index,Span<byte> value)
+
+        public Action SQLSetData(int table, int column, int index, Span<byte> value)
         {
             System.Text.StringBuilder SB = new StringBuilder();
             SB.Append("UPDATE ");
@@ -103,10 +100,9 @@ namespace UniverServer
             SB.Append("INSERT INTO ");
             SB.Append(Tables[table]);
             SB.Append(" VALUES(");
-            for(int i = 0; i < values.Count() -1; i++)
+            for (int i = 0; i < values.Count() - 1; i++)
             {
                 SB.Append(values[i] + ", ");
-
             }
             SB.Append(values[values.Count()] + ")");
 
@@ -120,22 +116,20 @@ namespace UniverServer
             return null;
         }
 
-        public void Run(MainWindow mainWindowP, CancellationToken BacklineCanselToken)
+        public Action Run(MainWindow mainWindowP, CancellationToken BacklineCanselToken)
         {
             mainWindow = mainWindowP;
             setup();
             while (!BacklineCanselToken.IsCancellationRequested)
             {
-                Thread.Sleep(1);
-
-
-
+                //Thread.Sleep(1);
             }
 
-
-            End();
+            Dispose();
+            return null;
         }
-        public void End()
+
+        public void Dispose()
         {
             if (sqlConn.State != System.Data.ConnectionState.Closed)
             {

@@ -1,26 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using SharedVars;
+using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using SharedVars;
 
 namespace Client
 {
-    class ClientMain
+    internal class ClientMain
     {
-        MainWindow clientMainWindow;
-        bool exit = false;
+        private MainWindow clientMainWindow;
+        private bool exit = false;
         public IPAddress serverIPLocalv4;
         public string hostName;
-        bool connected = false;
-        IPHostEntry hostEntry;
-        byte[] Databuffer = new byte[Vars.BUFFER_SIZE];
+        private bool connected = false;
+        private IPHostEntry hostEntry;
+        private byte[] Databuffer = new byte[Vars.BUFFER_SIZE];
         private Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
 
         public void Run(MainWindow CMW, CancellationToken BacklineCanselToken)
         {
@@ -28,8 +26,6 @@ namespace Client
             hostName = Dns.GetHostName();
             hostEntry = Dns.GetHostEntry(hostName);
             serverIPLocalv4 = hostEntry.AddressList.Last().MapToIPv4();
-
-
 
             try
             {
@@ -39,13 +35,12 @@ namespace Client
                 while (!connected && !BacklineCanselToken.IsCancellationRequested)
 
                 {
-                    Thread.Sleep(10); 
+                    //Thread.Sleep(1);
                 }
             }
             catch (SocketException)
             {
                 clientMainWindow.Set_Sys_Mes("Socket exception");  // you can put a counter here to see how many attempts are made
-
             }
             clientMainWindow.Set_Sys_Mes("Connected");
             while (!exit && !BacklineCanselToken.IsCancellationRequested)
@@ -66,8 +61,8 @@ namespace Client
         {
             connected = true;
             clientMainWindow.Set_Sys_Mes("Connection Success.");
-
         }
+
         private void RecieveCallback(IAsyncResult callback)
         {
             try
@@ -78,7 +73,7 @@ namespace Client
                 buffer = Databuffer;
                 if (recievedSize > 0)
                 {
-                    string text = Encoding.ASCII.GetString(buffer.ToArray(),Vars.CLIENT_SIGN.Length, recievedSize- Vars.CLIENT_SIGN.Length);
+                    string text = Encoding.ASCII.GetString(buffer.ToArray(), Vars.CLIENT_SIGN.Length, recievedSize - Vars.CLIENT_SIGN.Length);
                     if (buffer[0] == Vars.SERVER_SIGN[0])
                     {
                         clientMainWindow.Set_Sys_Mes(text);
@@ -94,6 +89,7 @@ namespace Client
                 Console.WriteLine(e);
             }
         }
+
         public void Send(string text)
         {
             Task.Run(() =>
@@ -115,6 +111,7 @@ namespace Client
             }
              );
         }
+
         public void End()
         {
             if (socket.Connected)
@@ -131,7 +128,6 @@ namespace Client
 
         ~ClientMain()
         {
-
             End();
         }
     }

@@ -4,8 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Configuration;
-using System.Data;
 
 namespace UniverServer
 {
@@ -13,10 +11,10 @@ namespace UniverServer
     {
         public DatabaseManager databaseManagerInstance = new DatabaseManager();
         public ServerMain serverMainInstance = new ServerMain();
-        Task BacklineTask;
-        Task BacklineDatabaseTask;
+        private Task BacklineTask;
+        private Task BacklineDatabaseTask;
         public static CancellationTokenSource BacklineCanselTokenSource = new CancellationTokenSource();
-        static CancellationToken BacklineCanselToken = BacklineCanselTokenSource.Token;
+        private static CancellationToken BacklineCanselToken = BacklineCanselTokenSource.Token;
 
         public MainWindow()
         {
@@ -35,10 +33,8 @@ namespace UniverServer
                 "IPv4:\t\t\t" + serverMainInstance.serverIPLocalv4 + '\n' +
                 "hostName:\t\t" + serverMainInstance.hostName + '\n' +
                 "Status:\t\t\t" + serverMainInstance.status;
-
-            BacklineDatabaseTask = Task.Run(() => databaseManagerInstance.Run(this, BacklineCanselToken));
-            BacklineTask = Task.Run(() => serverMainInstance.Run(this, BacklineCanselToken));
-
+            BacklineTask = Task.Factory.StartNew(() => serverMainInstance.Run(this, BacklineCanselToken), TaskCreationOptions.LongRunning);
+            BacklineDatabaseTask = Task.Factory.StartNew(() => databaseManagerInstance.Run(this, BacklineCanselToken), TaskCreationOptions.LongRunning);
         }
 
         public Action Refresh_Async()
@@ -55,8 +51,6 @@ namespace UniverServer
             return null;
         }
 
-
-
         private void Cli_Del_Click(object sender, RoutedEventArgs eventArgs)
         {
             if (Cli_Lis.Items.IsEmpty)
@@ -66,9 +60,12 @@ namespace UniverServer
 
             Monitor.Enter(ServerMain.monitorLock);
 
-            try {
+            try
+            {
                 ServerMain.Clients.RemoveAt(Cli_Lis.SelectedIndex);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Console.WriteLine(e);
             }
 
@@ -99,9 +96,12 @@ namespace UniverServer
 
             Monitor.Enter(ServerMain.monitorLock);
 
-            try {
+            try
+            {
                 ServerMain.ClientHistory.RemoveAt(His_Lis.SelectedIndex);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Console.WriteLine(e);
             }
 
@@ -129,11 +129,13 @@ namespace UniverServer
             His_Del.IsEnabled = false;
         }
 
-        private void Cli_Sen_Click(object sender, RoutedEventArgs e) {
+        private void Cli_Sen_Click(object sender, RoutedEventArgs e)
+        {
             serverMainInstance.SendText(Cli_Mes.Text, Cli_Lis.SelectedIndex);
         }
 
-        private void Bro_Sen_Click(object sender, RoutedEventArgs e) {
+        private void Bro_Sen_Click(object sender, RoutedEventArgs e)
+        {
             //Task.Run(() => serverMainInstance.SendTextAll(Bro_Mes.Text));
             serverMainInstance.SendTextAll(Bro_Mes.Text);
         }
@@ -166,10 +168,12 @@ namespace UniverServer
 
             Monitor.Exit(ServerMain.monitorLock);
 
-            if (Cli_Lis.Items.IsEmpty) {
+            if (Cli_Lis.Items.IsEmpty)
+            {
                 Cli_Cle.IsEnabled = false;
             }
-            if (His_Lis.Items.IsEmpty) {
+            if (His_Lis.Items.IsEmpty)
+            {
                 His_Cle.IsEnabled = false;
             }
 
@@ -206,29 +210,27 @@ namespace UniverServer
                 }
             }
         }
+
         ~MainWindow()
         {
             End();
         }
+
         protected virtual void OnExit(ExitEventArgs e)
         {
             BacklineCanselTokenSource.Cancel();
         }
+
         public Action EndAction()
         {
             End();
 
-            return delegate() { };
+            return delegate () { };
         }
 
         private void End()
         {
-            
             OnExit(null);
         }
-
-
-
-
     }
 }

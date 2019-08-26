@@ -1,10 +1,5 @@
-﻿using System;
-
-namespace SharedVars
+﻿namespace SharedVars
 {
-    using System;
-
-
     static public class Vars
     {
         public const int SERVER_PORT = 8083;

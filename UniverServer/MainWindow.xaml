@@ -45,7 +45,7 @@
             <Button x:Name="Ref_All" Click="Ref_All_Click">Refresh All</Button>
         </StackPanel>
         <StackPanel  Grid.Column="1">
-            <TextBox> Server Log</TextBox>
+            <TextBox>Server Log</TextBox>
             <TextBox Height="100"  MaxHeight="100" x:Name="Ser_Log"></TextBox>
             <Border Height="10"></Border>
             <TextBlock> Broadcast to Clients</TextBlock>
@@ -55,7 +55,6 @@
             <TextBlock> Send to Client</TextBlock>
             <TextBox Height="100" x:Name="Cli_Mes"></TextBox>
             <Button Height="20" Width="100" FontSize="12" x:Name="Cli_Sen" Click="Cli_Sen_Click">Send</Button>
-
         </StackPanel>
     </Grid>
 </Window>

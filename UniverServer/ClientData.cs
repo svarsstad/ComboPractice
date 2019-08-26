@@ -1,7 +1,7 @@
-﻿using System.Net.Sockets;
-using System.Threading.Tasks;
-using System;
+﻿using System;
+using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace UniverServer
 {
@@ -14,6 +14,7 @@ namespace UniverServer
         public int i; //id number/ index number
         public bool dataToSend = false;
         public CancellationToken cancellationToken;
+
         public ClientData(int idn, Socket sc, CancellationToken pCancellationToken)
         {
             id = Guid.NewGuid().ToString();
@@ -22,7 +23,8 @@ namespace UniverServer
             this.i = idn;
             cancellationToken = pCancellationToken;
         }
-        public ClientData(int pI, Socket pSocket,Task pT, CancellationToken pCancellationToken)
+
+        public ClientData(int pI, Socket pSocket, Task pT, CancellationToken pCancellationToken)
         {
             id = Guid.NewGuid().ToString();
             socket = pSocket;
@@ -30,9 +32,9 @@ namespace UniverServer
             this.i = pI;
             cancellationToken = pCancellationToken;
         }
+
         public void End()
         {
-            
             if (socket != null && socket.Connected)
             {
                 try
@@ -50,6 +52,7 @@ namespace UniverServer
                 task.Dispose();
             }
         }
+
         ~ClientData()
         {
             End();
