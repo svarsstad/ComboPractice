@@ -98,7 +98,6 @@ namespace UniverServer
                 status = "Offline";
                 ServerMain.serverMainWindow.SetLog("server shutdown");
                 serverMainWindow.Dispatcher.InvokeAsync(serverMainWindow.EndAction());
-                
             }
             return null;
         }
