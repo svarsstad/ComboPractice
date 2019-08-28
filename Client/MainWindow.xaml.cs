@@ -54,5 +54,16 @@ namespace Client
         {
             BacklineCanselTokenSource.Cancel();
         }
+
+        private void Login_Click(object sender, RoutedEventArgs e)
+        {
+            clientBackend.Login(Username_Input.Text, Password_Input.Text);
+
+        }
+
+        private void Connect_Click(object sender, RoutedEventArgs e)
+        {
+            clientBackend.Connect();
+        }
     }
 }

@@ -1,11 +1,12 @@
 ﻿using System;
+using SharedVars;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace UniverServer
 {
-    public class ClientData
+    public class ClientData : IDisposable
     {
         public Socket socket;
         public Task task;
@@ -14,6 +15,7 @@ namespace UniverServer
         public int i; //id number/ index number
         public bool dataToSend = false;
         public CancellationToken cancellationToken;
+        byte[] socketDataBuffer = new byte[Vars.BUFFER_SIZE];
 
         public ClientData(int idn, Socket sc, CancellationToken pCancellationToken)
         {
@@ -33,14 +35,17 @@ namespace UniverServer
             cancellationToken = pCancellationToken;
         }
 
-        public void End()
+        public void Dispose()
         {
             if (socket != null && socket.Connected)
             {
                 try
                 {
                     socket.Shutdown(SocketShutdown.Both);
-                    socket.Disconnect(true);
+                    if (socket.Connected)
+                    {
+                        socket.Disconnect(true);
+                    }
                 }
                 catch (SocketException e)
                 {
@@ -49,13 +54,10 @@ namespace UniverServer
             }
             if (task != null)
             {
+                task.Wait();
                 task.Dispose();
             }
-        }
-
-        ~ClientData()
-        {
-            End();
+            socketDataBuffer = null;
         }
     }
 }

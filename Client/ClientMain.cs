@@ -9,41 +9,33 @@ using System.Threading.Tasks;
 
 namespace Client
 {
-    internal class ClientMain
+    internal class ClientMain : IDisposable
     {
         private MainWindow clientMainWindow;
-        private bool exit = false;
         public IPAddress serverIPLocalv4;
         public string hostName;
+        private int sessionId = -1;
         private bool connected = false;
         private IPHostEntry hostEntry;
         private byte[] Databuffer = new byte[Vars.BUFFER_SIZE];
-        private Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        private CancellationToken backlineCanselToken;
+        private Socket socket;// = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-        public void Run(MainWindow CMW, CancellationToken BacklineCanselToken)
+        public void Run(MainWindow CMW, CancellationToken pBacklineCanselToken)
         {
             clientMainWindow = CMW;
             hostName = Dns.GetHostName();
             hostEntry = Dns.GetHostEntry(hostName);
             serverIPLocalv4 = hostEntry.AddressList.Last().MapToIPv4();
+            backlineCanselToken = pBacklineCanselToken;
 
-            try
+            while (!connected && !backlineCanselToken.IsCancellationRequested)
+
             {
-                //socket.Connect(serverIPLocalv4, Vars.serverPort);
-                socket.BeginConnect(serverIPLocalv4, Vars.SERVER_PORT, ConnectionAccepted, null);
-
-                while (!connected && !BacklineCanselToken.IsCancellationRequested)
-
-                {
-                    //Thread.Sleep(1);
-                }
-            }
-            catch (SocketException)
-            {
-                clientMainWindow.Set_Sys_Mes("Socket exception");  // you can put a counter here to see how many attempts are made
+                Thread.Sleep(1);
             }
             clientMainWindow.Set_Sys_Mes("Connected");
-            while (!exit && !BacklineCanselToken.IsCancellationRequested)
+            while (!backlineCanselToken.IsCancellationRequested)
             {
                 try
                 {
@@ -57,10 +49,39 @@ namespace Client
             clientMainWindow.Dispatcher.InvokeAsync(clientMainWindow.EndAction());
         }
 
+        public void Connect()
+        {
+            try
+            {
+                socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                socket.BeginConnect(serverIPLocalv4, Vars.SERVER_PORT, ConnectionAccepted, null);
+            }
+            catch (SocketException)
+            {
+                clientMainWindow.Set_Sys_Mes("Socket exception");  // you can put a counter here to see how many attempts are made
+            }
+        }
+
         private void ConnectionAccepted(IAsyncResult callback)
         {
-            connected = true;
-            clientMainWindow.Set_Sys_Mes("Connection Success.");
+
+            if (socket.Connected)
+            {
+                connected = true;
+                clientMainWindow.Set_Sys_Mes("Connection Success.");
+                socket.EndConnect(callback); // prevents blocking by begin connect
+
+            }
+            else
+            {
+                connected = false;
+                clientMainWindow.Set_Sys_Mes("Connection failed.");
+                socket.Close(); // prevents blocking by begin connect
+
+            }
+
+                return;
+            
         }
 
         private void RecieveCallback(IAsyncResult callback)
@@ -74,9 +95,13 @@ namespace Client
                 if (recievedSize > 0)
                 {
                     string text = Encoding.ASCII.GetString(buffer.ToArray(), Vars.CLIENT_SIGN.Length, recievedSize - Vars.CLIENT_SIGN.Length);
-                    if (buffer[0] == Vars.SERVER_SIGN[0])
+                    if (text[0] == Vars.SERVER_SIGN[0])
                     {
                         clientMainWindow.Set_Sys_Mes(text);
+                    }
+                    else if(text[0] == Vars.LOGIN_REPLY_CHAR)
+                    {
+                        ProcessLoginReply(text.Remove(0, 1));
                     }
                     else
                     {
@@ -90,18 +115,23 @@ namespace Client
             }
         }
 
+        public void Login(string username, string password)
+        {
+            Send(Vars.LOGIN_CHAR + username + Vars.SP_SEPARATION_CHAR + password);
+        }
+
         public void Send(string text)
         {
             Task.Run(() =>
             {
                 if (!MainWindow.BacklineCanselTokenSource.IsCancellationRequested)
                 {
-                    Span<byte> dataReply = stackalloc byte[text.Length * 2];
-                    dataReply = Encoding.ASCII.GetBytes(Vars.CLIENT_SIGN + text);
+                    Span<byte> dataMessage = stackalloc byte[text.Length * 2];
+                    dataMessage = Encoding.ASCII.GetBytes(Vars.CLIENT_SIGN + text);
 
                     try
                     {
-                        socket.Send(dataReply.ToArray());
+                        socket.Send(dataMessage.ToArray());
                     }
                     catch (Exception e)
                     {
@@ -111,8 +141,20 @@ namespace Client
             }
              );
         }
+        private void ProcessLoginReply(string text)
+        {
+            sessionId = Convert.ToInt32(text);
+            if (sessionId != -1)
+            {
+                clientMainWindow.Set_Sys_Mes("Login Successful");
+            }
+            else
+            {
+                clientMainWindow.Set_Sys_Mes("Login failed");
+            }
+        }
 
-        public void End()
+        public void Dispose()
         {
             if (socket.Connected)
             {
@@ -120,15 +162,9 @@ namespace Client
                 buffer = Encoding.ASCII.GetBytes("~");
                 socket.Send(buffer.ToArray());
                 socket.Shutdown(SocketShutdown.Both);
-                socket.Disconnect(true);
+                socket.Close();
             }
-            exit = true;
             clientMainWindow.EndAction();
-        }
-
-        ~ClientMain()
-        {
-            End();
         }
     }
 }

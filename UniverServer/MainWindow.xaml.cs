@@ -9,10 +9,10 @@ namespace UniverServer
 {
     public partial class MainWindow : Window
     {
-        public DatabaseManager databaseManagerInstance = new DatabaseManager();
-        public ServerMain serverMainInstance = new ServerMain();
-        private Task BacklineTask;
-        private Task BacklineDatabaseTask;
+        public static DatabaseManager databaseManagerInstance = new DatabaseManager();
+        public static ServerMain serverMainInstance = new ServerMain();
+        private static Task BacklineTask;
+        private static Task BacklineDatabaseTask;
         public static CancellationTokenSource BacklineCanselTokenSource = new CancellationTokenSource();
         private static CancellationToken BacklineCanselToken = BacklineCanselTokenSource.Token;
 
@@ -78,8 +78,7 @@ namespace UniverServer
         private void Cli_Cle_Click(object sender, RoutedEventArgs e)
         {
             Monitor.Enter(ServerMain.monitorLock);
-
-            ServerMain.Clients = new List<ClientData>();
+            serverMainInstance.RemoveClients();
 
             Monitor.Exit(ServerMain.monitorLock);
 
@@ -172,9 +171,17 @@ namespace UniverServer
             {
                 Cli_Cle.IsEnabled = false;
             }
+            else
+            {
+                Cli_Cle.IsEnabled = true;
+            }
             if (His_Lis.Items.IsEmpty)
             {
                 His_Cle.IsEnabled = false;
+            }
+            else
+            {
+                His_Cle.IsEnabled = true;
             }
 
             Status_Box.Text =

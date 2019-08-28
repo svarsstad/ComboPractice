@@ -14,6 +14,7 @@ namespace UniverServer
     {
         private static bool exit = false;
         private static MainWindow serverMainWindow;
+        private static DatabaseManager databaseManagerInstance;
 
         // Monitor
         public static object monitorLock = new object();
@@ -28,7 +29,7 @@ namespace UniverServer
         static public List<ClientData> ClientHistory = new List<ClientData>();
         static public List<CancellationTokenSource> ClientCanselTokenSources = new List<CancellationTokenSource>();
 
-        private byte[][] socketDataBuffer = new byte[Vars.MAX_CLIENTS][];
+        private byte[][] socketDataBuffer = new byte[Vars.MAX_LISTEN_CLIENTS][];
 
         //network
         public IPAddress serverIPLocalv4;
@@ -40,7 +41,7 @@ namespace UniverServer
 
         public Action Run(MainWindow mainWindow, CancellationToken BacklineCanselToken)
         {
-            for (int i = 0; i < Vars.MAX_CLIENTS; i++)
+            for (int i = 0; i < Vars.MAX_LISTEN_CLIENTS; i++)
             {
                 socketDataBuffer[i] = new byte[Vars.BUFFER_SIZE];
             }
@@ -52,7 +53,7 @@ namespace UniverServer
             serverIPLocalv4 = hostEntry.AddressList.Last().MapToIPv4();
 
             serverSocket.Bind(new IPEndPoint(serverIPLocalv4, Vars.SERVER_PORT));
-            serverSocket.Listen(Vars.MAX_CLIENTS);
+            serverSocket.Listen(Vars.MAX_LISTEN_CLIENTS);
 
             try
             {
@@ -64,7 +65,7 @@ namespace UniverServer
 
                 while (exit != true && !BacklineCanselToken.IsCancellationRequested)
                 {
-                    if (Vars.MAX_CLIENTS >= receptors)
+                    if (Vars.MAX_LISTEN_CLIENTS >= receptors)
                     {
                         serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), null);
                         Interlocked.Increment(ref receptors);
@@ -214,19 +215,28 @@ namespace UniverServer
                 Span<byte> dataBuffer = stackalloc byte[recievedSize];
                 dataBuffer = socketDataBuffer[clientData.i];
 
-                string text = Encoding.ASCII.GetString(dataBuffer.ToArray(), Vars.CLIENT_SIGN.Length, recievedSize - Vars.CLIENT_SIGN.Length);
+                string text = Encoding.ASCII.GetString(dataBuffer.ToArray(), sizeof(char), recievedSize - sizeof(char));
                 if (recievedSize > 0)
                 {
-                    if (dataBuffer[0] == Vars.CLIENT_SIGN[0])
+                    if (dataBuffer[0] == Vars.CLIENT_SIGN)
                     {
-                        if (text == "~")
+                        if (text[0] == Vars.DELETE_CHAR)
                         {
                             RemoveClient(clientData.i);
                             serverMainWindow.SetLog(clientData.i + " Removed");
                             return;
                         }
-                        SendText("All good.", clientData.socket);
-                        serverMainWindow.SetLog(clientData.i + ": " + text);
+                        else if (text[0] == Vars.LOGIN_CHAR)
+                        {
+                            text = text.Remove(0, 1);
+                            string[] message = text.Split(Vars.SP_SEPARATION_CHAR);
+
+                        }
+                        else
+                        {
+                            SendText("All good.", clientData.socket);
+                            serverMainWindow.SetLog(clientData.i + ": " + text);
+                        }
                     }
                     else
                     {
@@ -246,9 +256,11 @@ namespace UniverServer
         {
             Monitor.Enter(monitorLock);
             ClientCanselTokenSources[index].Cancel();
-            Clients[index].End();
+            socketDataBuffer[index] = new byte[Vars.BUFFER_SIZE];
+            Clients[index].Dispose();
 
             Clients[index] = null;
+            EndSession(index);
             Monitor.Exit(monitorLock);
         }
 
@@ -272,23 +284,40 @@ namespace UniverServer
             Dispose();
         }
 
+        public async void BeginSession(string username, string password)
+        {
+           int result = await Task.Run(() => MainWindow.databaseManagerInstance.Login(username,password));
+
+
+            return;
+        }
+
         public Action EndSession(int id)
         {
-            serverMainWindow.databaseManagerInstance.EndSession(id);
+            MainWindow.databaseManagerInstance.EndSession(id);
+            return null;
+        }
+
+        public Action RemoveClients()
+        {
+            for (int i = 0; i < Clients.Count - 1; i++)
+            {
+                ClientCanselTokenSources[i].Cancel();
+                if (Clients[i] != null)
+                {
+                    Clients[i].Dispose();
+                }
+            }
+            ClientCanselTokenSources = new List<CancellationTokenSource>();
+            Clients = new List<ClientData>();
+            MainWindow.databaseManagerInstance.EndSessions();
             return null;
         }
 
         public void Dispose()
         {
             exit = true;
-            for (int i = 0; i < Clients.Count - 1; i++)
-            {
-                ClientCanselTokenSources[i].Cancel();
-                if (Clients[i] != null)
-                {
-                    Clients[i].End();
-                }
-            }
+            RemoveClients();
             try
             {
                 serverSocket.Shutdown(SocketShutdown.Both);

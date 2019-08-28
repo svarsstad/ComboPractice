@@ -8,10 +8,14 @@
         Title="MainWindow" Height="250" Width="400">
     <Grid>
         <StackPanel>
-        <TextBlock> Send to Client</TextBlock>
-        <TextBox Height="100" x:Name="Cli_Mes"></TextBox>
-        <Button Height="20" Width="100" FontSize="12" x:Name="Cli_Sen" Click="Cli_Sen_Click">Send</Button>
-            <TextBox TextWrapping="WrapWithOverflow" x:Name="sys_mes"></TextBox>
+            <Button Height="20" Width="100" FontSize="12" x:Name="Cli_Con" Click="Connect_Click">Connect</Button>
+            <TextBox Height="20" x:Name="Username_Input">username</TextBox>
+            <TextBox Height="20" x:Name="Password_Input">password</TextBox>
+            <Button Height="20" Width="100" FontSize="12" x:Name="Cli_Log" Click="Login_Click">Login</Button>
+            <TextBlock> Send to Server</TextBlock>
+            <TextBox Height="20" x:Name="Cli_Mes"></TextBox>
+            <Button Height="20" Width="100" FontSize="12" x:Name="Cli_Sen" Click="Cli_Sen_Click">Send</Button>
+            <TextBox Height="100" TextWrapping="WrapWithOverflow" x:Name="sys_mes"></TextBox>
         </StackPanel>
     </Grid>
 </Window>
