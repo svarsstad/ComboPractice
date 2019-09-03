@@ -122,7 +122,7 @@ namespace Client
             {
                 if (!MainWindow.BacklineCanselTokenSource.IsCancellationRequested)
                 {
-                    Span<byte> dataMessage = stackalloc byte[text.Length * 2];
+                    Span<byte> dataMessage = stackalloc byte[text.Length * 2+sizeof(char)];
                     dataMessage = Encoding.ASCII.GetBytes(Vars.CLIENT_SIGN + text);
 
                     try
