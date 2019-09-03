@@ -94,8 +94,8 @@ namespace Client
                 buffer = Databuffer;
                 if (recievedSize > 0)
                 {
-                    string text = Encoding.ASCII.GetString(buffer.ToArray(), Vars.CLIENT_SIGN.Length, recievedSize - Vars.CLIENT_SIGN.Length);
-                    if (text[0] == Vars.SERVER_SIGN[0])
+                    string text = Encoding.ASCII.GetString(buffer.ToArray(), sizeof(char), recievedSize - sizeof(char));
+                    if (text[0] == Vars.SERVER_SIGN)
                     {
                         clientMainWindow.Set_Sys_Mes(text);
                     }
