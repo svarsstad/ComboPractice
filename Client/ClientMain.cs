@@ -64,24 +64,20 @@ namespace Client
 
         private void ConnectionAccepted(IAsyncResult callback)
         {
-
             if (socket.Connected)
             {
                 connected = true;
                 clientMainWindow.Set_Sys_Mes("Connection Success.");
                 socket.EndConnect(callback); // prevents blocking by begin connect
-
             }
             else
             {
                 connected = false;
                 clientMainWindow.Set_Sys_Mes("Connection failed.");
                 socket.Close(); // prevents blocking by begin connect
-
             }
 
-                return;
-            
+            return;
         }
 
         private void RecieveCallback(IAsyncResult callback)
@@ -94,12 +90,12 @@ namespace Client
                 buffer = Databuffer;
                 if (recievedSize > 0)
                 {
-                    string text = Encoding.ASCII.GetString(buffer.ToArray(), sizeof(char), recievedSize - sizeof(char));
+                    string text = Encoding.ASCII.GetString(buffer.ToArray(), 0, recievedSize);
                     if (text[0] == Vars.SERVER_SIGN)
                     {
-                        clientMainWindow.Set_Sys_Mes(text);
+                        clientMainWindow.Set_Sys_Mes(text.Remove(0, 1));
                     }
-                    else if(text[0] == Vars.LOGIN_REPLY_CHAR)
+                    else if (text[0] == Vars.LOGIN_REPLY_CHAR)
                     {
                         ProcessLoginReply(text.Remove(0, 1));
                     }
@@ -141,6 +137,7 @@ namespace Client
             }
              );
         }
+
         private void ProcessLoginReply(string text)
         {
             sessionId = Convert.ToInt32(text);

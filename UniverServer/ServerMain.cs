@@ -215,7 +215,7 @@ namespace UniverServer
                 Span<byte> dataBuffer = stackalloc byte[recievedSize];
                 dataBuffer = socketDataBuffer[clientData.i];
 
-                string text = Encoding.ASCII.GetString(dataBuffer.ToArray(), sizeof(char), recievedSize - sizeof(char));
+                string text = Encoding.ASCII.GetString(dataBuffer.ToArray(), 1, recievedSize - 1);
                 if (recievedSize > 0)
                 {
                     if (dataBuffer[0] == Vars.CLIENT_SIGN)
@@ -238,6 +238,7 @@ namespace UniverServer
                             serverMainWindow.SetLog(clientData.i + ": " + text);
                         }
                     }
+                   
                     else
                     {
                         ///do nothing. this is a message sendt by the server to a client on the same device
@@ -286,8 +287,7 @@ namespace UniverServer
 
         public async void BeginSession(string username, string password)
         {
-           int result = await Task.Run(() => MainWindow.databaseManagerInstance.Login(username,password));
-
+            int result = await Task.Run(() => MainWindow.databaseManagerInstance.Login(username, password));
 
             return;
         }

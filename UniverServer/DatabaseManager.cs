@@ -12,7 +12,7 @@ namespace UniverServer
 {
     public class DatabaseManager : IDisposable
     {
-        String connectString = ConfigurationManager.ConnectionStrings["UniverServer.Properties.Settings.DatabaseConnectionString"].ConnectionString;
+        private String connectString = ConfigurationManager.ConnectionStrings["UniverServer.Properties.Settings.DatabaseConnectionString"].ConnectionString;
         private MainWindow mainWindow;
         private SqlConnection sqlConn;
         private SqlCommand sqlComm;
@@ -23,14 +23,12 @@ namespace UniverServer
 
         private void setup()
         {
-
             sqlConn = new SqlConnection(connectString);
             Columns = new string[Tables.Length][];
             string[] restrictions = new string[4] { null, null, null, null };
             Array columnList;
             try
             {
-
                 sqlConn.Open();
                 for (int tableIndex = 0; tableIndex < Tables.Length; tableIndex++)
                 {
@@ -81,7 +79,6 @@ namespace UniverServer
                 sqlConn.Close();
             }
 
-
             return false;
         }
 
@@ -92,8 +89,6 @@ namespace UniverServer
             {
                 return sessionId;
             }
-
-
             else
             {
                 return -1;

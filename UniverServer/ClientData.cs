@@ -1,5 +1,5 @@
-﻿using System;
-using SharedVars;
+﻿using SharedVars;
+using System;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +15,7 @@ namespace UniverServer
         public int i; //id number/ index number
         public bool dataToSend = false;
         public CancellationToken cancellationToken;
-        byte[] socketDataBuffer = new byte[Vars.BUFFER_SIZE];
+        private byte[] socketDataBuffer = new byte[Vars.BUFFER_SIZE];
 
         public ClientData(int idn, Socket sc, CancellationToken pCancellationToken)
         {
